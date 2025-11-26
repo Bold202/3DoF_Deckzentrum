@@ -171,6 +171,7 @@ namespace D8PlanerXR.AR
         private static readonly Color GREEN_COLOR = new Color(0.3f, 0.8f, 0.3f);
         private static readonly Color YELLOW_COLOR = new Color(0.9f, 0.9f, 0.3f);
         private static readonly Color RED_COLOR = new Color(0.9f, 0.3f, 0.3f);
+        private static readonly Color PURPLE_COLOR = new Color(0.7f, 0.2f, 0.9f); // Lila für Medikation!
         private static readonly Color UNKNOWN_COLOR = Color.gray;
 
         /// <summary>
@@ -228,6 +229,8 @@ namespace D8PlanerXR.AR
                     return YELLOW_COLOR;
                 case SowData.TrafficLightColor.Red:
                     return RED_COLOR;
+                case SowData.TrafficLightColor.Purple:
+                    return PURPLE_COLOR;
                 default:
                     return UNKNOWN_COLOR;
             }

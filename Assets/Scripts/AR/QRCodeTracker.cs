@@ -174,27 +174,83 @@ namespace D8PlanerXR.AR
             cameraTexture.Apply();
             buffer.Dispose();
 
-            // QR-Code dekodieren
-            DecodeQRCodesFromTexture(cameraTexture);
+            // MULTI-QR-Code dekodieren (unterstützt bis zu maxSimultaneousDetections)
+            DecodeMultipleQRCodes(cameraTexture);
         }
 
         /// <summary>
-        /// Dekodiert QR-Codes aus einer Textur
+        /// Dekodiert mehrere QR-Codes aus einer Textur (Multi-Detection)
         /// </summary>
-        private void DecodeQRCodesFromTexture(Texture2D texture)
+        private void DecodeMultipleQRCodes(Texture2D texture)
         {
             try
             {
-                var result = barcodeReader.Decode(texture.GetPixels32(), texture.width, texture.height);
+                // Verwende Multi-Decode für gleichzeitige Erkennung
+                var reader = new ZXing.Multi.GenericMultipleBarcodeReader(
+                    new ZXing.QrCode.QRCodeReader()
+                );
+
+                var results = reader.DecodeMultiple(
+                    new BitmapLuminanceSource(texture.GetPixels32(), texture.width, texture.height)
+                );
                 
-                if (result != null)
+                if (results != null && results.Length > 0)
                 {
-                    ProcessDetectedQRCode(result);
+                    int detectionCount = Mathf.Min(results.Length, maxSimultaneousDetections);
+                    for (int i = 0; i < detectionCount; i++)
+                    {
+                        ProcessDetectedQRCode(results[i]);
+                    }
+
+                    if (showDebugInfo && results.Length > maxSimultaneousDetections)
+                    {
+                        Debug.LogWarning($"Mehr als {maxSimultaneousDetections} QR-Codes erkannt. " +
+                                       $"Nur die ersten {maxSimultaneousDetections} werden verarbeitet.");
+                    }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"QR-Code Dekodierung fehlgeschlagen: {e.Message}");
+                // Fallback auf Single-Detection
+                try
+                {
+                    var result = barcodeReader.Decode(texture.GetPixels32(), texture.width, texture.height);
+                    if (result != null)
+                    {
+                        ProcessDetectedQRCode(result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"QR-Code Dekodierung fehlgeschlagen: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper Klasse für ZXing Multi-Detection
+        /// </summary>
+        private class BitmapLuminanceSource : ZXing.BaseLuminanceSource
+        {
+            private readonly byte[] luminances;
+
+            public BitmapLuminanceSource(Color32[] pixels, int width, int height) : base(width, height)
+            {
+                luminances = new byte[width * height];
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    Color32 c = pixels[i];
+                    // Graustufenkonvertierung
+                    luminances[i] = (byte)((c.r + c.g + c.b) / 3);
+                }
+            }
+
+            public override byte[] Matrix => luminances;
+
+            protected override LuminanceSource CreateLuminanceSource(byte[] newLuminances, int width, int height)
+            {
+                // Nicht verwendet für QR-Code Detection
+                return null;
             }
         }
 

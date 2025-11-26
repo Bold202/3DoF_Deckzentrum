@@ -16,15 +16,17 @@ namespace D8PlanerXR.Data
         public int ventilNumber;             // Ventil-/Buchtennummer
         public DateTime matingDate;          // Deckdatum
         public string pregnancyStatus;       // Trächtigkeitsstatus
+        public string healthStatus;          // Gesundheitszustand (für Medikations-Flag)
         public int daysSinceMating;          // Tage seit Deckung
         public TrafficLightColor trafficLight; // Ampelfarbe
         public Dictionary<string, string> additionalData; // Zusätzliche Daten aus CSV
 
         public enum TrafficLightColor
         {
-            Green,
-            Yellow,
-            Red,
+            Green,      // Tragend <80 Tage
+            Yellow,     // 80-106 Tage
+            Red,        // 107+ Tage (kurz vor Abferkelung)
+            Purple,     // Medikation erforderlich!
             Unknown
         }
 
@@ -73,12 +75,13 @@ namespace D8PlanerXR.Data
         public event Action<string> OnImportError;
 
         // Ampel-Schwellwerte (Tage seit Deckung)
+        // Grün: tragend <80 Tage, Gelb/Orange: <107 Tage, Rot: <118+ Tage
         [Header("Ampel-Logik")]
         [SerializeField] private int greenThresholdMin = 0;
-        [SerializeField] private int greenThresholdMax = 21;
-        [SerializeField] private int yellowThresholdMin = 22;
-        [SerializeField] private int yellowThresholdMax = 28;
-        [SerializeField] private int redThresholdMin = 29;
+        [SerializeField] private int greenThresholdMax = 79;
+        [SerializeField] private int yellowThresholdMin = 80;
+        [SerializeField] private int yellowThresholdMax = 106;
+        [SerializeField] private int redThresholdMin = 107;
 
         private void Awake()
         {
@@ -155,6 +158,7 @@ namespace D8PlanerXR.Data
                 int earTagColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.EarTagNumber));
                 int matingDateColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.MatingDate));
                 int pregnancyStatusColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.PregnancyStatus));
+                int healthStatusColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.HealthStatus));
 
                 if (ventilColumnIndex < 0 || earTagColumnIndex < 0)
                 {
@@ -210,7 +214,6 @@ namespace D8PlanerXR.Data
                             {
                                 sowData.matingDate = matingDate;
                                 sowData.daysSinceMating = (DateTime.Now - matingDate).Days;
-                                sowData.trafficLight = CalculateTrafficLight(sowData.daysSinceMating);
                             }
                         }
 
@@ -219,6 +222,15 @@ namespace D8PlanerXR.Data
                         {
                             sowData.pregnancyStatus = values[pregnancyStatusColumnIndex].Trim();
                         }
+
+                        // Gesundheitsstatus (optional)
+                        if (healthStatusColumnIndex >= 0 && healthStatusColumnIndex < values.Length)
+                        {
+                            sowData.healthStatus = values[healthStatusColumnIndex].Trim();
+                        }
+
+                        // Ampelfarbe berechnen (nach allen Daten)
+                        sowData.trafficLight = CalculateTrafficLight(sowData);
 
                         // Alle Spalten als zusätzliche Daten speichern
                         for (int j = 0; j < headers.Length && j < values.Length; j++)
@@ -311,17 +323,33 @@ namespace D8PlanerXR.Data
         }
 
         /// <summary>
-        /// Berechnet die Ampelfarbe basierend auf Tagen seit Deckung
+        /// Berechnet die Ampelfarbe basierend auf Tagen seit Deckung und Gesundheitsstatus
+        /// Lila = Medikation hat höchste Priorität!
         /// </summary>
-        private SowData.TrafficLightColor CalculateTrafficLight(int daysSinceMating)
+        private SowData.TrafficLightColor CalculateTrafficLight(SowData sow)
         {
-            if (daysSinceMating >= greenThresholdMin && daysSinceMating <= greenThresholdMax)
+            // Priorität 1: Medikation (Lila)
+            if (!string.IsNullOrEmpty(sow.healthStatus))
+            {
+                string health = sow.healthStatus.ToLower();
+                if (health.Contains("medikation") || health.Contains("medication") || 
+                    health.Contains("behandlung") || health.Contains("treatment") ||
+                    health.Contains("krank") || health.Contains("sick"))
+                {
+                    return SowData.TrafficLightColor.Purple;
+                }
+            }
+
+            // Priorität 2: Tage seit Deckung
+            int days = sow.daysSinceMating;
+            
+            if (days >= greenThresholdMin && days <= greenThresholdMax)
                 return SowData.TrafficLightColor.Green;
             
-            if (daysSinceMating >= yellowThresholdMin && daysSinceMating <= yellowThresholdMax)
+            if (days >= yellowThresholdMin && days <= yellowThresholdMax)
                 return SowData.TrafficLightColor.Yellow;
             
-            if (daysSinceMating >= redThresholdMin)
+            if (days >= redThresholdMin)
                 return SowData.TrafficLightColor.Red;
             
             return SowData.TrafficLightColor.Unknown;
@@ -449,7 +477,7 @@ namespace D8PlanerXR.Data
             // Alle Ampelfarben neu berechnen
             foreach (var sow in earTagToSowMap.Values)
             {
-                sow.trafficLight = CalculateTrafficLight(sow.daysSinceMating);
+                sow.trafficLight = CalculateTrafficLight(sow);
             }
         }
     }
