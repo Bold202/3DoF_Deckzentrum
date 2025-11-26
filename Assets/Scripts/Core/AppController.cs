@@ -6,6 +6,7 @@ namespace D8PlanerXR.Core
     /// <summary>
     /// Haupt-Controller für die D8-Planer XR Anwendung
     /// Koordiniert alle Hauptkomponenten und initialisiert das System
+    /// Unterstützt VR-Modus (Viture) und Handy-Modus
     /// </summary>
     public class AppController : MonoBehaviour
     {
@@ -16,9 +17,10 @@ namespace D8PlanerXR.Core
         [Header("AR System")]
         [SerializeField] private QRCodeTracker qrTracker;
         [SerializeField] private VirtualDeckzentrum virtualDeckzentrum;
+        [SerializeField] private DeviceModeManager deviceModeManager;
         
         [Header("App Info")]
-        [SerializeField] private string appVersion = "1.0.0";
+        [SerializeField] private string appVersion = "1.1.0";
         [SerializeField] private bool showVersionInLog = true;
         
         private static AppController instance;
@@ -28,6 +30,7 @@ namespace D8PlanerXR.Core
         public string AppVersion => appVersion;
         public QRCodeTracker QRTracker => qrTracker;
         public VirtualDeckzentrum VirtualDeckzentrum => virtualDeckzentrum;
+        public DeviceModeManager DeviceModeManager => deviceModeManager;
 
         private void Awake()
         {
@@ -57,6 +60,23 @@ namespace D8PlanerXR.Core
             // Singletons initialisieren
             var configManager = Data.CSVConfigManager.Instance;
             var dataRepository = Data.DataRepository.Instance;
+
+            // Device Mode Manager initialisieren
+            if (deviceModeManager == null)
+            {
+                deviceModeManager = FindObjectOfType<DeviceModeManager>();
+                if (deviceModeManager == null)
+                {
+                    // DeviceModeManager erstellen falls nicht vorhanden
+                    GameObject dmObj = new GameObject("DeviceModeManager");
+                    deviceModeManager = dmObj.AddComponent<DeviceModeManager>();
+                    Debug.Log("✓ Device Mode Manager erstellt");
+                }
+                else
+                {
+                    Debug.Log("✓ Device Mode Manager gefunden");
+                }
+            }
 
             // AR-Komponenten finden falls nicht zugewiesen
             if (qrTracker == null)
@@ -90,6 +110,10 @@ namespace D8PlanerXR.Core
             if (showVersionInLog)
             {
                 Debug.Log($"✓ D8-Planer XR v{appVersion} erfolgreich initialisiert");
+                if (deviceModeManager != null)
+                {
+                    Debug.Log($"  Modus: {deviceModeManager.CurrentMode}");
+                }
             }
             
             Debug.Log("=================================================");

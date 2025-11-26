@@ -3,12 +3,14 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using D8PlanerXR.Data;
+using D8PlanerXR.Core;
 
 namespace D8PlanerXR.AR
 {
     /// <summary>
     /// Ventil-Overlay Komponente
     /// Zeigt Informationen über Sauen an einem Ventil als AR-Overlay an
+    /// Unterstützt VR-Modus und Handy-Modus mit unterschiedlichen Update-Intervallen
     /// </summary>
     public class VentilOverlay : MonoBehaviour
     {
@@ -47,8 +49,15 @@ namespace D8PlanerXR.AR
                 transform.Rotate(0, 180, 0); // Umdrehen, damit Text richtig herum ist
             }
 
+            // Update-Intervall basierend auf Gerätemodus
+            float currentUpdateInterval = updateInterval;
+            if (DeviceModeManager.Instance != null)
+            {
+                currentUpdateInterval = DeviceModeManager.Instance.UpdateInterval;
+            }
+
             // Periodisches Update der Daten
-            if (Time.time - lastUpdateTime > updateInterval)
+            if (Time.time - lastUpdateTime > currentUpdateInterval)
             {
                 RefreshData();
                 lastUpdateTime = Time.time;
