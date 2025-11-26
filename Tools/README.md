@@ -1,6 +1,64 @@
-# QR-Code Generator Tool
+# D8-Planer XR - QR-Code Generator Tools
 
-## Python Standalone Tool
+Dieses Verzeichnis enthält Werkzeuge zur QR-Code Generierung für die D8-Planer XR Anwendung.
+
+## Übersicht
+
+Es gibt zwei QR-Code Generatoren:
+
+1. **qr_generator_batch.py** - **EMPFOHLEN**: Batch-Generator für alle 199 QR-Codes als JPG
+2. **qr_generator.py** - Original Python-Tool (PNG Format)
+
+---
+
+## 🚀 qr_generator_batch.py (EMPFOHLEN)
+
+### Beschreibung
+Generiert alle Ventil-QR-Codes (1-199) im druckfertigen JPG-Format.
+
+**Spezifikationen:**
+- **Größe**: 50x80mm (590x944px bei 300 DPI)
+- **QR-Code**: 45x45mm mit Level H Fehlerkorrektur (30%)
+- **Label**: Große, gut lesbare Ventilnummer unterhalb
+- **Format**: JPEG (95% Qualität)
+- **Dateinamen**: 1.jpg, 2.jpg, ..., 199.jpg
+
+### Installation
+
+```bash
+pip install qrcode[pil] pillow
+```
+
+### Verwendung
+
+**Alle QR-Codes generieren (1-199):**
+```bash
+python3 qr_generator_batch.py
+```
+
+**Einzelnen QR-Code generieren:**
+```bash
+python3 qr_generator_batch.py --single 42
+```
+
+**Bestimmten Bereich generieren:**
+```bash
+python3 qr_generator_batch.py --range 1 50
+```
+
+### Ausgabe
+- Ordner: `QRCodes/`
+- 199 JPG-Dateien (ca. 40-50 KB pro Datei)
+- Druckfertig bei 300 DPI
+- Geeignet für Katasymbol T50M Pro Label Printer
+
+### QR-Code Inhalt
+- Format: `VENTIL-XXX` (z.B. "VENTIL-001", "VENTIL-042")
+- Kompatibel mit Unity App
+
+---
+
+## 📄 qr_generator.py (Original)
 
 ### Installation
 
