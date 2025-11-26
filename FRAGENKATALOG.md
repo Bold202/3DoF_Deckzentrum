@@ -10,9 +10,9 @@
 ### 1.1 Viture Hardware
 **Frage 1.1.1**: Welche exakte Android-Version läuft auf dem Viture Neckband Pro?
 - [ ] Android 11
-- [ ] Android 12
-- [ ] Android 13
-- [ ] Andere: ___________
+- [x ] Android 12
+- [x ] Android 13
+- [x ] Andere: neueste
 
 **Antwort**: 
 
