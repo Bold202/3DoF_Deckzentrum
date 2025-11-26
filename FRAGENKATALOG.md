@@ -417,9 +417,9 @@
 
 ### 6.2 Offline-Funktionalität
 **Frage 6.2.1**: Muss die App **komplett** ohne Internet funktionieren?
-- [ ] Ja, niemals Internet nötig
+- [ x] Ja, niemals Internet nötig
 - [ ] Nein, einmalige Ersteinrichtung online möglich
-- [ ] Andere: ___________
+- [ ] Andere: nur Speichern von E-Mail Anhängen im app ordner
 
 **Antwort**: 
 
@@ -440,7 +440,7 @@
 - [ ] Unity 2023 LTS
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: ?
 
 
 **Frage 7.1.2**: Soll die App in C# (Unity) oder nativem Android (Kotlin/Java) entwickelt werden?
@@ -461,13 +461,13 @@
 ### 7.2 Performance & Optimierung
 **Frage 7.2.1**: Wie viele QR-Codes können gleichzeitig im Sichtfeld sein (maximale Anzahl)?
 
-**Antwort**: 
+**Antwort**: 2 bis 5
 
 
 **Frage 7.2.2**: Wie oft soll die QR-Code-Erkennung pro Sekunde laufen (Frame Rate für Detection)?
 - [ ] Kontinuierlich (jedes Frame)
 - [ ] 10 FPS
-- [ ] 5 FPS
+- [ x] 5 FPS
 - [ ] Andere: ___________
 
 **Antwort**: 
@@ -475,14 +475,14 @@
 
 **Frage 7.2.3**: Soll die App im Hintergrund laufen können oder immer im Vordergrund?
 
-**Antwort**: 
+**Antwort**: Sie spielt ja nur einzelne zahlen ein die nicht stören sollen, deswegen immer im vordergrund
 
 
 ### 7.3 Berechtigungen
 **Frage 7.3.1**: Welche Android-Berechtigungen werden benötigt?
-- [ ] Kamera (für QR-Erkennung)
+- [ x] Kamera (für QR-Erkennung) - bei NUR Handy Benutzung ohne XR Brille (Nutzung per Handy Kamera ermöglichen)
 - [ ] Dateizugriff (für CSV)
-- [ ] Bluetooth (für Drucker)
+- [ x] Bluetooth (für Drucker)
 - [ ] Andere: ___________
 
 **Antwort**: 
@@ -495,7 +495,7 @@
 ### 8.1 Testszenarien
 **Frage 8.1.1**: Sollen Mock-Daten für Tests erstellt werden?
 
-**Antwort**: 
+**Antwort**: ja
 
 
 **Frage 8.1.2**: Welche Edge Cases sollen getestet werden?
@@ -519,7 +519,7 @@
 - [ ] Toast-Benachrichtigungen
 - [ ] Overlay-Fehlermeldung
 - [ ] Logdatei
-- [ ] Andere: ___________
+- [ ] Andere: Daten mit Error Vermerk im Blickfeld
 
 **Antwort**: 
 
@@ -541,23 +541,23 @@
 - [ ] USB-Transfer
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: USB/Mail Transfer
 
 
 **Frage 9.1.2**: Soll die App signiert werden (Release Build)?
 
-**Antwort**: 
+**Antwort**: ja, 
 
 
 ### 9.2 Updates
 **Frage 9.2.1**: Wie sollen Updates verteilt werden?
 
-**Antwort**: 
+**Antwort**: per neuer APK
 
 
 **Frage 9.2.2**: Soll eine Versionsnummer sichtbar sein in der App?
 
-**Antwort**: 
+**Antwort**: ja
 
 
 ---
@@ -567,33 +567,33 @@
 ### 10.1 Erweiterte Funktionen
 **Frage 10.1.1**: Sollen Nutzer Notizen zu einzelnen Sauen machen können?
 
-**Antwort**: 
+**Antwort**: ja, per voice 
 
 
 **Frage 10.1.2**: Soll es Alarme/Erinnerungen geben (z.B. "Sau X muss kontrolliert werden")?
 
-**Antwort**: 
+**Antwort**: in V2, nicht aktuell
 
 
 **Frage 10.1.3**: Soll es eine Export-Funktion geben (z.B. Nutzungsstatistiken, Logs)?
 
-**Antwort**: 
+**Antwort**: in V2, nicht aktuell
 
 
 **Frage 10.1.4**: Sollen mehrere Nutzer/Profile unterstützt werden?
 
-**Antwort**: 
+**Antwort**: in V2, nicht aktuell
 
 
 ### 10.2 Sicherheit
 **Frage 10.2.1**: Gibt es Datenschutz-Anforderungen (DSGVO)?
 
-**Antwort**: 
+**Antwort**: in V2, nicht aktuell
 
 
 **Frage 10.2.2**: Soll die App mit Passwort/PIN geschützt werden können?
 
-**Antwort**: 
+**Antwort**: in V2, nicht aktuell
 
 
 ---
@@ -602,22 +602,22 @@
 
 **Frage 11.1**: Wann soll die App einsatzbereit sein? (Zeitrahmen)
 
-**Antwort**: 
+**Antwort**: 19uhr
 
 
 **Frage 11.2**: Gibt es bereits Code/Prototypen oder startet das Projekt von Null?
 
-**Antwort**: 
+**Antwort**: nein
 
 
 **Frage 11.3**: Wer wird die App testen (Beta-Tester im Stall)?
 
-**Antwort**: 
+**Antwort**: ich selbst
 
 
 **Frage 11.4**: Gibt es ein Budget für Lizenzen (Unity Pro, Plugins, etc.)?
 
-**Antwort**: 
+**Antwort**: 0,0€
 
 
 ---
@@ -626,17 +626,17 @@
 
 **Frage 12.1**: Gibt es weitere spezielle Anforderungen, die noch nicht erwähnt wurden?
 
-**Antwort**: 
+**Antwort**: in V2, nicht aktuell
 
 
 **Frage 12.2**: Gibt es bestehende Systeme/Datenbanken, mit denen die App integriert werden soll?
 
-**Antwort**: 
+**Antwort**: DB Planer  CSV-Datei
 
 
 **Frage 12.3**: Welche Personen sollen Zugriff auf dieses Projekt haben (Entwickler, Stakeholder)?
 
-**Antwort**: 
+**Antwort**: jeder, in V2 mit profilen
 
 
 ---
@@ -644,7 +644,7 @@
 ## ABSCHLUSS
 
 **Prioritäten**: Bitte nummerieren Sie die 5 wichtigsten Features/Anforderungen nach Priorität:
-1. ___________
+1. XR Vision im Deckzentrum mit den Sauennummern und den QR Codes
 2. ___________
 3. ___________
 4. ___________
