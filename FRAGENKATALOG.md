@@ -122,12 +122,12 @@
 
 **Frage 2.2.3**: Soll die App mehrere QR-Codes gleichzeitig erkennen und anzeigen können, oder immer nur den aktuell fokussierten Code?
 
-**Antwort**: 
+**Antwort**: unbedingt ja!
 
 
 **Frage 2.2.4**: Wo genau befinden sich die Ventile (Wandhöhe, Abstand zueinander)?
-- Höhe vom Boden: _____ cm
-- Abstand zwischen Ventilen: _____ cm
+- Höhe vom Boden: 250 cm
+- Abstand zwischen Ventilen: 400 cm
 
 **Antwort**: 
 
@@ -139,16 +139,16 @@
 ### 3.1 CSV-Format
 **Frage 3.1.1**: Können Sie eine Beispiel-CSV-Datei aus dem "DB Sauenplaner" bereitstellen? (Bitte mit anonymisierten/Beispieldaten)
 
-**Antwort**: 
+**Antwort**: ja, folgt.
 
 
 **Frage 3.1.2**: Welche Spalten enthält die CSV-Datei aktuell? Bitte alle Spaltennamen auflisten:
-1. ___________
+1. Sauennummer
 2. ___________
-3. ___________
-4. ___________ (etc.)
+3. Ventilnummer
+4. Abferkeldatum
 
-**Antwort**: 
+**Antwort**: s.o.
 
 
 **Frage 3.1.3**: Welche Spalten sind zwingend erforderlich für die Kernfunktion?
@@ -157,7 +157,7 @@
 - Trächtigkeitsstatus / Decktag: ___________
 - Andere wichtige Spalten: ___________
 
-**Antwort**: 
+**Antwort**: ja, ja und ja
 
 
 **Frage 3.1.4**: Welches Trennzeichen wird verwendet?
@@ -166,11 +166,11 @@
 - [ ] Tabulator
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: ? siehe beispiel
 
 
 **Frage 3.1.5**: Gibt es eine Header-Zeile (Spaltenüberschriften) in der CSV?
-- [ ] Ja
+- [x] Ja
 - [ ] Nein
 
 **Antwort**: 
@@ -178,7 +178,7 @@
 
 **Frage 3.1.6**: Welches Zeichenkodierung wird verwendet (UTF-8, ISO-8859-1, Windows-1252)?
 
-**Antwort**: 
+**Antwort**: ?
 
 
 **Frage 3.1.7**: Wie oft wird die CSV-Datei aktualisiert?
@@ -187,31 +187,31 @@
 - [ ] Bei Bedarf manuell
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: 14 Tage
 
 
 ### 3.2 Datenlogik
 **Frage 3.2.1**: Wie viele Sauen können maximal an einem Ventil stehen? (Sie erwähnten "bis zu 10")
 
-**Antwort**: 
+**Antwort**: 10, ja
 
 
 **Frage 3.2.2**: Wie wird die Zuordnung Sau → Ventil in der CSV dargestellt?
-- [ ] Jede Zeile = eine Sau mit Ventilnummer-Spalte
+- [ x] Jede Zeile = eine Sau mit Ventilnummer-Spalte
 - [ ] Gruppiert nach Ventilen
 - [ ] Andere Struktur: ___________
 
-**Antwort**: 
+**Antwort**: s.o.
 
 
 **Frage 3.2.3**: Können mehrere Sauen die gleiche Ohrmarkennummer haben? (Duplikatprüfung nötig?)
 
-**Antwort**: 
+**Antwort**: nein
 
 
 **Frage 3.2.4**: Gibt es leere Ventile (ohne zugeordnete Sauen)? Wie sollen diese angezeigt werden?
 
-**Antwort**: 
+**Antwort**: leer
 
 
 ---
@@ -220,22 +220,22 @@
 
 ### 4.1 Ampel-Logik
 **Frage 4.1.1**: Welche Farben hat das Ampelsystem und was bedeuten sie?
-- Grün: ___________
-- Gelb/Orange: ___________
-- Rot: ___________
-- Weitere Farben?: ___________
+- Grün: tragend <80 Tage
+- Gelb/Orange: <107 Tage
+- Rot: <118 + Tage
+- Weitere Farben?: Lila, Medikation!
 
-**Antwort**: 
+**Antwort**: s.o.
 
 
 **Frage 4.1.2**: Basiert die Ampel-Farbe auf:
-- [ ] Tage seit Deckung
-- [ ] Trächtigkeitsstatus (bestätigt/unbestätigt)
-- [ ] Gesundheitszustand
-- [ ] Kombination aus mehreren Faktoren
+- [ x] Tage seit Deckung
+- [ x] Trächtigkeitsstatus (bestätigt/unbestätigt)
+- [ x] Gesundheitszustand
+- [ x] Kombination aus mehreren Faktoren
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: siehe 4.1.1
 
 
 **Frage 4.1.3**: Wenn basierend auf Tagen seit Deckung, welche Schwellwerte gelten?
@@ -243,11 +243,11 @@
 - Gelb: Tag _____ bis Tag _____
 - Rot: Tag _____ bis Tag _____
 
-**Antwort**: 
+**Antwort**: 4.1.1
 
 
 **Frage 4.1.4**: Wie wird das Deckdatum in der CSV gespeichert (Format)?
-- [ ] DD.MM.YYYY (z.B. 15.03.2024)
+- [x ] DD.MM.YYYY (z.B. 15.03.2024)
 - [ ] YYYY-MM-DD (z.B. 2024-03-15)
 - [ ] Tage seit Epoche (Unix-Zeit)
 - [ ] Andere: ___________
@@ -257,7 +257,7 @@
 
 **Frage 4.1.5**: Soll das System automatisch die heutige Tageszeit berücksichtigen oder nur Datumsvergleiche?
 
-**Antwort**: 
+**Antwort**: nur datum
 
 
 ### 4.2 Anzeigedetails
@@ -268,13 +268,13 @@
 - [ ] Deckdatum
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: ja
 
 
 **Frage 4.2.7**: In welcher Reihenfolge sollen die Sauen an einem Ventil sortiert werden?
 - [ ] Alphabetisch nach Ohrmarkennummer
 - [ ] Nach Deckdatum (älteste zuerst)
-- [ ] Nach Ampelstatus (Rot zuerst)
+- [ x] Nach Ampelstatus (Rot zuerst)
 - [ ] Andere: ___________
 
 **Antwort**: 
@@ -282,7 +282,7 @@
 
 **Frage 4.2.8**: Sollen historische Daten gespeichert werden (z.B. vergangene Abferkelungen)?
 
-**Antwort**: 
+**Antwort**: nein
 
 
 ---
@@ -291,25 +291,25 @@
 
 ### 5.1 AR-Overlay
 **Frage 5.1.1**: Wie groß soll das virtuelle Overlay unter jedem Ventil sein (in cm oder Pixel)?
-- Breite: _____ cm / px
-- Höhe: _____ cm / px
+- Breite: 30 cm / px
+- Höhe: 60 cm / px
 
 **Antwort**: 
 
 
 **Frage 5.1.2**: Soll das Overlay immer sichtbar sein oder nur beim direkten Anschauen des Ventils (Gaze-basiert)?
 
-**Antwort**: 
+**Antwort**: umschaltbar, muss der Benutzer entscheiden
 
 
 **Frage 5.1.3**: Wie weit unter dem QR-Code soll das Overlay angezeigt werden?
-- Abstand: _____ cm
+- Abstand: 10 cm
 
 **Antwort**: 
 
 
 **Frage 5.1.4**: Soll das Overlay "einfrieren" (statisch an der Position bleiben) oder dem Kopf folgen?
-- [ ] Statisch im Raum (6DOF Spatial Anchor)
+- [ x] Statisch im Raum (6DOF Spatial Anchor)
 - [ ] Folgt dem Kopf (3DOF)
 - [ ] Hybrid: ___________
 
@@ -317,17 +317,17 @@
 
 
 **Frage 5.1.5**: Welche Schriftgröße ist aus der Arbeitsposition gut lesbar?
-- Mindest-Schriftgröße: _____ pt/cm
+- Mindest-Schriftgröße: 4 pt/cm
 
 **Antwort**: 
 
 
 ### 5.2 Hauptmenü & Navigation
 **Frage 5.2.1**: Soll es ein Hauptmenü geben? Falls ja, welche Funktionen?
-- [ ] CSV-Datei neu importieren
-- [ ] CSV-Spalten konfigurieren (Ihre Anforderung)
+- [ x] CSV-Datei neu importieren
+- [ x] CSV-Spalten konfigurieren (Ihre Anforderung)
 - [ ] Statistiken anzeigen (z.B. Anzahl Sauen pro Status)
-- [ ] Einstellungen (Schriftgröße, Farben anpassen)
+- [ x] Einstellungen (Schriftgröße, Farben anpassen)
 - [ ] Über/Hilfe
 - [ ] Andere: ___________
 
@@ -336,43 +336,43 @@
 
 **Frage 5.2.2**: Wie soll das Menü aufgerufen werden?
 - [ ] Gesten (z.B. Wischbewegung)
-- [ ] Sprachbefehl
+- [ x] Sprachbefehl
 - [ ] Fester Button im Sichtfeld
 - [ ] QR-Code für Menü
-- [ ] Andere: ___________
+- [ ] Andere: Steuerung über SmartWatch Touchpad und Gesten der Luma Ultra
 
 **Antwort**: 
 
 
 **Frage 5.2.3**: Soll es ein "Virtuelles Deckzentrum" geben (statische Gesamtansicht aller Ventile)? Was soll dort angezeigt werden?
 
-**Antwort**: 
+**Antwort**:  ja, einen groben Gutterraum wo die Ventile in der gleichen Reihenfolge angeordnet sind. anhand von Scan Daten - also erst nach dem ersten Durchgang durch das Deckzentrum, wenn die Setup Datei fertig ist. diese sollte beim ersten Start erstellt werden können, aber auch ohne funktionieren, zumindest live wo die Codes sind.
 
 
 ### 5.3 CSV-Spalten-Menü (Ihre spezifische Anforderung)
 **Frage 5.3.1**: Sollen Nutzer nur die Anzeige-Spalten konfigurieren oder auch die Datenlogik (welche Spalte = Ventilnummer, welche = Deckdatum)?
 
-**Antwort**: 
+**Antwort**: ja
 
 
 **Frage 5.3.2**: Soll die Spaltenkonfiguration pro CSV-Datei gespeichert werden (CSV-Profil) oder global für die App?
 
-**Antwort**: 
+**Antwort**: über auswählbare oresets speichern wäre gut, diese definierbar machen.
 
 
 **Frage 5.3.3**: Sollen Nutzer Spalten-Aliase definieren können? (z.B. "Ear_Tag" → "Ohrmarke")
 
-**Antwort**: 
+**Antwort**: nein, bzw ja, definiert der Nutzer eine Ohrmarken immer führt die App ihn zu der Sau oder nennt die Ventilnummer wo die steht
 
 
 **Frage 5.3.4**: Müssen Nutzer Datentypen festlegen können (Text, Zahl, Datum)?
 
-**Antwort**: 
+**Antwort**: nein
 
 
 **Frage 5.3.5**: Soll es Vorlagen geben für häufige CSV-Strukturen?
 
-**Antwort**: 
+**Antwort**: nein
 
 
 ---
@@ -383,14 +383,14 @@
 **Frage 6.1.1**: Wo soll die CSV-Datei abgelegt werden?
 - [ ] Interner Speicher: /Android/data/com.ihr.app/files/
 - [ ] SD-Karte
-- [ ] App-spezifischer Ordner
+- [ x] App-spezifischer Ordner
 - [ ] Freie Wahl durch Nutzer (File Picker)
 
 **Antwort**: 
 
 
 **Frage 6.1.2**: Wie soll die Datei heißen (fester Name oder variabel)?
-- Fester Name: ___________
+- Fester Name: ImportDZ
 - [ ] Beliebiger Name, App erkennt .csv automatisch
 
 **Antwort**: 
@@ -400,19 +400,19 @@
 - [ ] Fehlermeldung anzeigen
 - [ ] Notfall-Modus (letzte gecachte Daten)
 - [ ] Leeres Overlay
-- [ ] Andere: ___________
+- [ ] Andere: es werden nur die Ventilnummern zu den QR Codes angezeigt
 
 **Antwort**: 
 
 
 **Frage 6.1.4**: Soll die App automatisch nach CSV-Updates suchen oder muss der Nutzer manuell aktualisieren?
 
-**Antwort**: 
+**Antwort**: manuell
 
 
 **Frage 6.1.5**: Soll eine Backup-Funktion für alte CSV-Versionen existieren?
 
-**Antwort**: 
+**Antwort**: ja, Historie abrufen mit alten dateien
 
 
 ### 6.2 Offline-Funktionalität
