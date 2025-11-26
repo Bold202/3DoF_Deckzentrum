@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using ZXing;
+using D8PlanerXR.Core;
 
 namespace D8PlanerXR.AR
 {
     /// <summary>
     /// QR-Code Tracking für AR
     /// Erkennt QR-Codes in der Kamera und erstellt Spatial Anchors
+    /// Unterstützt VR-Modus (Viture) und Handy-Modus
     /// </summary>
     [RequireComponent(typeof(ARCameraManager))]
     public class QRCodeTracker : MonoBehaviour
@@ -20,8 +22,10 @@ namespace D8PlanerXR.AR
         
         [Header("Tracking Einstellungen")]
         [SerializeField] private float scanInterval = 0.2f; // Scan alle 0.2 Sekunden (5 FPS)
+        [SerializeField] private float scanIntervalMobile = 0.5f; // Längeres Intervall für Handy-Modus
         [SerializeField] private float minDetectionConfidence = 0.8f;
         [SerializeField] private int maxSimultaneousDetections = 5;
+        [SerializeField] private int maxSimultaneousDetectionsMobile = 1; // Nur 1 QR-Code im Handy-Modus
         
         [Header("Overlay Prefab")]
         [SerializeField] private GameObject ventilOverlayPrefab;
@@ -59,6 +63,9 @@ namespace D8PlanerXR.AR
             if (arCamera == null)
                 arCamera = Camera.main;
 
+            // Scan-Intervall basierend auf Gerätemodus anpassen
+            UpdateScanIntervalForMode();
+
             StartScanning();
         }
 
@@ -84,6 +91,40 @@ namespace D8PlanerXR.AR
             };
             
             Debug.Log("QR-Code Reader initialisiert");
+        }
+
+        /// <summary>
+        /// Aktualisiert das Scan-Intervall basierend auf dem Gerätemodus
+        /// </summary>
+        private void UpdateScanIntervalForMode()
+        {
+            if (DeviceModeManager.Instance != null)
+            {
+                if (DeviceModeManager.Instance.IsMobileMode)
+                {
+                    scanInterval = scanIntervalMobile;
+                    if (showDebugInfo)
+                        Debug.Log($"[QRCodeTracker] Handy-Modus: Scan-Intervall auf {scanInterval}s gesetzt");
+                }
+                else
+                {
+                    // VR-Modus: Standard-Intervall verwenden
+                    if (showDebugInfo)
+                        Debug.Log($"[QRCodeTracker] VR-Modus: Scan-Intervall auf {scanInterval}s gesetzt");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gibt die maximale Anzahl gleichzeitiger Detections basierend auf Modus zurück
+        /// </summary>
+        private int GetMaxDetectionsForMode()
+        {
+            if (DeviceModeManager.Instance != null && DeviceModeManager.Instance.IsMobileMode)
+            {
+                return maxSimultaneousDetectionsMobile;
+            }
+            return maxSimultaneousDetections;
         }
 
         /// <summary>
@@ -196,16 +237,17 @@ namespace D8PlanerXR.AR
                 
                 if (results != null && results.Length > 0)
                 {
-                    int detectionCount = Mathf.Min(results.Length, maxSimultaneousDetections);
+                    int maxDetections = GetMaxDetectionsForMode();
+                    int detectionCount = Mathf.Min(results.Length, maxDetections);
                     for (int i = 0; i < detectionCount; i++)
                     {
                         ProcessDetectedQRCode(results[i]);
                     }
 
-                    if (showDebugInfo && results.Length > maxSimultaneousDetections)
+                    if (showDebugInfo && results.Length > maxDetections)
                     {
-                        Debug.LogWarning($"Mehr als {maxSimultaneousDetections} QR-Codes erkannt. " +
-                                       $"Nur die ersten {maxSimultaneousDetections} werden verarbeitet.");
+                        Debug.LogWarning($"Mehr als {maxDetections} QR-Codes erkannt. " +
+                                       $"Nur die ersten {maxDetections} werden verarbeitet.");
                     }
                 }
             }

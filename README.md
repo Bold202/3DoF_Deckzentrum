@@ -11,12 +11,19 @@
 
 Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentrum mittels Augmented Reality. Während der Arbeit im Stall werden automatisch Informationen zu den Sauen an jedem Ventil als virtuelles Overlay eingeblendet.
 
+**NEU in Version 1.1:** 📱 **Handy-Modus** - Die App kann jetzt auch auf normalen Smartphones ohne VR-Hardware genutzt werden!
+
 ### Kernfunktionen
+
+✅ **Dual-Mode Support**
+- 🕶️ VR-Modus für Viture Neckband Pro + Luma Ultra
+- 📱 Handy-Modus für normale Android-Smartphones
+- 🔄 Automatische Hardware-Erkennung
 
 ✅ **QR-Code basierte AR-Erkennung**
 - Automatische Erkennung von Ventilen via QR-Code
 - Virtuelle Overlays unter jedem Ventil
-- Spatial Anchoring für stabile Anzeige
+- Spatial Anchoring für stabile Anzeige (VR-Modus)
 
 ✅ **Intelligentes Ampelsystem**
 - Grün/Gelb/Rot basierend auf Trächtigkeitsstatus
@@ -71,7 +78,8 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 - Unity 2022.3 LTS oder höher
 - Android SDK (API Level 24+)
 - Python 3.6+ (für QR-Generator Tool)
-- Viture Neckband Pro + Luma Ultra Brille
+- **Optional:** Viture Neckband Pro + Luma Ultra Brille (für VR-Modus)
+- **Alternativ:** Android-Smartphone mit ARCore-Support (für Handy-Modus)
 
 ### Installation
 
@@ -124,6 +132,8 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 
 | Dokument | Beschreibung |
 |----------|--------------|
+| [APK_BUILD_ANLEITUNG.md](APK_BUILD_ANLEITUNG.md) | **Vollständige APK-Build-Anleitung** für Android-Geräte |
+| [HANDY_MODUS_ANLEITUNG.md](HANDY_MODUS_ANLEITUNG.md) | **Benutzerhandbuch für Handy-Modus** (ohne VR-Hardware) |
 | [FRAGENKATALOG.md](FRAGENKATALOG.md) | **100+ Fragen** in 12 Kategorien zu allen Projektaspekten |
 | [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) | Vollständige Implementierungsanleitung mit Setup, Prefabs, Testing |
 | [CSV_EXAMPLES.md](CSV_EXAMPLES.md) | CSV-Format-Beispiele und Import-Anleitung |
@@ -131,7 +141,28 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 
 ## 🎯 Features im Detail
 
-### 1. CSV-Spalten-Konfigurationsmenü
+### 1. Dual-Mode Betrieb (NEU in v1.1)
+
+**VR-Modus (🕶️ Viture Neckband Pro + Luma Ultra):**
+- Volle AR-Funktionalität mit 6DoF Head-Tracking
+- Spatial Anchoring für stabile Overlays
+- Virtuelles Deckzentrum (3D-Übersicht)
+- Multi-QR-Code Erkennung (bis zu 5 gleichzeitig)
+- Freihändige Bedienung
+
+**Handy-Modus (📱 Android-Smartphone):**
+- Touch-basierte Steuerung
+- Einzeln-QR-Code Scanning
+- Batterie-optimiert
+- Keine zusätzliche Hardware nötig
+- Ideal für schnelle Kontrollen
+
+**Automatische Erkennung:**
+- App erkennt verfügbare Hardware
+- Wechsel zwischen Modi jederzeit möglich
+- Optimierte Einstellungen pro Modus
+
+### 2. CSV-Spalten-Konfigurationsmenü
 
 **Vollständig implementiert** in `Assets/Scripts/UI/CSVColumnMenuUI.cs`
 
@@ -143,7 +174,7 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 - ✅ Profile speichern/laden
 - ✅ Auto-Import aus CSV
 
-### 2. Daten-Repository
+### 3. Daten-Repository
 
 **Implementiert** in `Assets/Scripts/Data/DataRepository.cs`
 
@@ -154,7 +185,7 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 - ✅ Flexible Sortierung
 - ✅ Fehlertoleranter Import
 
-### 3. QR-Code System
+### 4. QR-Code System
 
 **Dual-Implementierung:**
 - Unity: `Assets/Scripts/QRCode/QRCodeGenerator.cs`
@@ -165,16 +196,18 @@ Features:
 - ✅ Fehlerkorrektur Level H (30%)
 - ✅ Menschenlesbare Labels
 - ✅ Druckerfreundliches Format
+- ✅ Modus-optimierte Scan-Intervalle
 
-### 4. AR-Overlay
+### 5. AR-Overlay
 
 **Implementiert** in `Assets/Scripts/AR/VentilOverlay.cs`
 
-- ✅ Spatial Anchoring
+- ✅ Spatial Anchoring (VR-Modus)
 - ✅ Ampel-Anzeige
 - ✅ Dynamische Sau-Liste
-- ✅ Auto-Update
+- ✅ Auto-Update mit Modus-optimierten Intervallen
 - ✅ Kamera-orientiert
+- ✅ Touch-responsiv (Handy-Modus)
 
 ## 🔧 Konfiguration
 
@@ -202,11 +235,13 @@ redThresholdMin = 29;     // Rot: Tag 29+
 
 Nach Beantwortung des [Fragenkatalogs](FRAGENKATALOG.md):
 
-1. ⏳ Viture SDK Integration
-2. ⏳ Bluetooth Drucker-Integration
-3. ⏳ Erweiterte UI/UX Features
-4. ⏳ Beta-Testing im Stall
-5. ⏳ Performance-Optimierung
+1. ✅ Dual-Mode Support (VR + Handy) - **IMPLEMENTIERT**
+2. ✅ APK Build Anleitung - **DOKUMENTIERT**
+3. ⏳ Viture SDK Integration (optional für erweiterte VR-Features)
+4. ⏳ Bluetooth Drucker-Integration
+5. ⏳ Erweiterte UI/UX Features
+6. ⏳ Beta-Testing im Stall (beide Modi)
+7. ⏳ Performance-Optimierung
 
 ## 🤝 Beitragen
 
@@ -225,6 +260,6 @@ Bei Fragen:
 
 ---
 
-**Status:** ✅ Kernfunktionalität implementiert, bereit für Testing  
-**Version:** 1.0  
+**Status:** ✅ Kernfunktionalität implementiert, VR + Handy-Modus verfügbar  
+**Version:** 1.1  
 **Letzte Aktualisierung:** 2025-11-26
