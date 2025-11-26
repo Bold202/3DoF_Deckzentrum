@@ -362,6 +362,7 @@ namespace D8PlanerXR.Data
         {
             if (column == null) return -1;
 
+            // Zuerst versuche exakte Namenszuordnung
             for (int i = 0; i < headers.Length; i++)
             {
                 if (headers[i].Trim().Equals(column.originalName, StringComparison.OrdinalIgnoreCase))
@@ -369,6 +370,23 @@ namespace D8PlanerXR.Data
                     return i;
                 }
             }
+            
+            // Falls keine exakte Übereinstimmung, prüfe auf Index-Suffix (z.B. "Belegdatum_Spalte5")
+            // Dies ermöglicht die Zuordnung von Spalten mit dynamischen Headern (wie Datums-Header)
+            if (column.originalName.Contains("_Spalte"))
+            {
+                string suffix = column.originalName.Substring(column.originalName.LastIndexOf("_Spalte") + 7);
+                if (int.TryParse(suffix, out int columnIndex))
+                {
+                    // Spaltenindex ist 1-basiert in der Konfiguration, 0-basiert im Array
+                    int arrayIndex = columnIndex - 1;
+                    if (arrayIndex >= 0 && arrayIndex < headers.Length)
+                    {
+                        return arrayIndex;
+                    }
+                }
+            }
+            
             return -1;
         }
 

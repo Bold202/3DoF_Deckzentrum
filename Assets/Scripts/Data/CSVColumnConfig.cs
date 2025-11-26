@@ -236,8 +236,10 @@ namespace D8PlanerXR.Data
             config.AddColumn("Sau-Nr.", ColumnType.Number, ColumnRole.VentilNumber);
             
             // Spalte 5: Dynamisches Datum = Belegdatum
-            // Header enthält ein Datum, aber die Spalte enthält das tatsächliche Belegdatum
-            config.AddColumn("24.11.2025", ColumnType.Date, ColumnRole.MatingDate);
+            // HINWEIS: Der CSV-Header enthält ein dynamisches Datum (z.B. "24.11.2025")
+            // das sich bei jedem Export ändert. Wir verwenden einen generischen Placeholder.
+            // Der Import muss diese Spalte per Index (4) identifizieren, nicht per Name.
+            config.AddColumn("Belegdatum_Spalte5", ColumnType.Date, ColumnRole.MatingDate);
             
             // Spalte 6: TK = Trächtigkeitstag
             config.AddColumn("TK", ColumnType.Number, ColumnRole.None);
