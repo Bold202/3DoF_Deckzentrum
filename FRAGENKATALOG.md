@@ -19,46 +19,46 @@
 
 **Frage 1.1.2**: Gibt es ein offizielles Viture SDK oder Entwickler-Dokumentation? Falls ja, bitte Link oder Zugriffsinformationen angeben.
 
-**Antwort**: 
+**Antwort**: https://static.viture.dev/external-file/sdk/viture_android_sdk_v1.0.7.tar.xz
 
 
 **Frage 1.1.3**: Unterstützt das Viture System AR Foundation, ARCore oder ein proprietäres XR-Framework?
 
-**Antwort**: 
+**Antwort**: ?
 
 
 **Frage 1.1.4**: Welche Auflösung und Sichtfeld (Field of View) hat die Viture Luma Ultra Brille?
 
-**Antwort**: 
+**Antwort**: siehe specs
 
 
 **Frage 1.1.5**: Gibt es Einschränkungen bei der Akkulaufzeit des Neckbands bei kontinuierlicher AR-Nutzung? Wie lange sollte die App im Dauerbetrieb laufen können?
 
-**Antwort**: 
+**Antwort**: neun, wird durch Powerbank permanent geladen
 
 
 ### 1.2 Bluetooth Label Printer
 **Frage 1.2.1**: Welches genaue Modell des Bluetooth Label Printers soll verwendet werden?
 
-**Antwort**: 
+**Antwort**: Katasymbol T50M Pro
 
 
 **Frage 1.2.2**: Welche Druckauflösung und Label-Größe werden benötigt für die QR-Codes?
-- Breite: _____ mm
-- Höhe: _____ mm
-- Auflösung: _____ DPI
+- Breite: 50 mm
+- Höhe: 80 mm
+- Auflösung: 800 DPI
 
-**Antwort**: 
+**Antwort**: s.o.
 
 
 **Frage 1.2.3**: Gibt es eine bevorzugte Druckprotokoll-Sprache (ESC/POS, ZPL, CPCL)?
 
-**Antwort**: 
+**Antwort**: ?
 
 
 **Frage 1.2.4**: Soll das QR-Code-Generator-Tool als separate Android-App oder als Desktop-Anwendung (Windows/Mac/Linux) entwickelt werden?
 
-**Antwort**: 
+**Antwort**: Android
 
 
 ---
@@ -71,7 +71,7 @@
 - [ ] Micro QR Code
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: Standart, 50x50. gerne sehr grob für gute Erkennung über Entfernung.
 
 
 **Frage 2.1.2**: Welche Fehlerkorrektur-Stufe ist erforderlich für die Stallumgebung (Verschmutzung)?
@@ -80,7 +80,7 @@
 - [ ] Q (Quartile ~25%)
 - [ ] H (High ~30%)
 
-**Antwort**: 
+**Antwort**: ?
 
 
 **Frage 2.1.3**: Welcher Inhalt soll im QR-Code kodiert werden?
@@ -89,31 +89,31 @@
 - [ ] JSON-Struktur: {"type": "ventil", "number": 42}
 - [ ] Andere: ___________
 
-**Antwort**: 
+**Antwort**: Ventilnummer
 
 
 **Frage 2.1.4**: Wie viele Ventile gibt es maximal im Stall? (Sie erwähnten 1-199, ist das korrekt?)
 
-**Antwort**: 
+**Antwort**: 1 - 199
 
 
 **Frage 2.1.5**: Sollen die QR-Codes zusätzlich eine für Menschen lesbare Nummer enthalten (unter dem QR-Code gedruckt)?
 
-**Antwort**: 
+**Antwort**: ja, 45x45 der QR, darunter die Nummer, weil ist ja 50x80
 
 
 ### 2.2 QR-Code Erkennung
 **Frage 2.2.1**: Aus welcher Entfernung sollen die QR-Codes erkannt werden?
-- Minimale Distanz: _____ cm
-- Maximale Distanz: _____ cm
-- Optimale Distanz: _____ cm
+- Minimale Distanz: 200 cm
+- Maximale Distanz: 600 cm
+- Optimale Distanz: 400 cm
 
-**Antwort**: 
+**Antwort**: s.o.
 
 
 **Frage 2.2.2**: Wie sind die Lichtverhältnisse im Stall?
 - [ ] Gut beleuchtet (Tageslicht + künstliche Beleuchtung)
-- [ ] Gedämpft (nur künstliche Beleuchtung)
+- [x ] Gedämpft (nur künstliche Beleuchtung)
 - [ ] Wechselhaft
 - [ ] Andere: ___________
 
