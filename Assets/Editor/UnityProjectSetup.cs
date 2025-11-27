@@ -40,9 +40,14 @@ namespace D8PlanerXR.Editor
         private const double MANIFEST_CACHE_TIMEOUT_SECONDS = 5.0;
         
         // Komponenten-Typnamen für Szenen-Erstellung
-        private const string APP_CONTROLLER_TYPE = "D8PlanerXR.Core.AppController, Assembly-CSharp";
-        private const string DEVICE_MODE_MANAGER_TYPE = "D8PlanerXR.Core.DeviceModeManager, Assembly-CSharp";
-        private const string VIRTUAL_DECKZENTRUM_TYPE = "D8PlanerXR.AR.VirtualDeckzentrum, Assembly-CSharp";
+        // Die Typnamen werden dynamisch aufgelöst, um mit verschiedenen Assembly-Konfigurationen zu funktionieren
+        private static readonly string[] APP_CONTROLLER_ASSEMBLIES = { "Assembly-CSharp", "D8PlanerXR" };
+        private static readonly string[] DEVICE_MODE_MANAGER_ASSEMBLIES = { "Assembly-CSharp", "D8PlanerXR" };
+        private static readonly string[] VIRTUAL_DECKZENTRUM_ASSEMBLIES = { "Assembly-CSharp", "D8PlanerXR" };
+        
+        private const string APP_CONTROLLER_TYPENAME = "D8PlanerXR.Core.AppController";
+        private const string DEVICE_MODE_MANAGER_TYPENAME = "D8PlanerXR.Core.DeviceModeManager";
+        private const string VIRTUAL_DECKZENTRUM_TYPENAME = "D8PlanerXR.AR.VirtualDeckzentrum";
         
         #endregion
         
@@ -991,6 +996,42 @@ namespace D8PlanerXR.Editor
         }
         
         /// <summary>
+        /// Versucht einen Typ aus mehreren möglichen Assemblies zu laden
+        /// </summary>
+        private static System.Type TryGetType(string typeName, string[] assemblies)
+        {
+            // Zuerst versuchen ohne Assembly-Angabe
+            var type = System.Type.GetType(typeName);
+            if (type != null) return type;
+            
+            // Dann mit verschiedenen Assembly-Namen
+            foreach (var assembly in assemblies)
+            {
+                type = System.Type.GetType($"{typeName}, {assembly}");
+                if (type != null) return type;
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Versucht eine Komponente sicher zu einem GameObject hinzuzufügen
+        /// </summary>
+        private static bool TryAddComponent<T>(GameObject obj, string componentName) where T : Component
+        {
+            try
+            {
+                obj.AddComponent<T>();
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[D8-Planer Setup] ⚠ {componentName} konnte nicht hinzugefügt werden: {ex.Message}");
+                return false;
+            }
+        }
+        
+        /// <summary>
         /// Erstellt die Hauptszene mit allen erforderlichen GameObjects
         /// </summary>
         public static void CreateMainScene()
@@ -1009,20 +1050,28 @@ namespace D8PlanerXR.Editor
                 UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
                 UnityEditor.SceneManagement.NewSceneMode.Single);
             
-            // 1. AR Session erstellen
+            bool arFoundationAvailable = true;
+            bool xrCoreUtilsAvailable = true;
+            
+            // 1. AR Session erstellen (mit Fehlerbehandlung)
             GameObject arSessionObj = new GameObject("AR Session");
-            arSessionObj.AddComponent<UnityEngine.XR.ARFoundation.ARSession>();
-            arSessionObj.AddComponent<UnityEngine.XR.ARFoundation.ARInputManager>();
-            Debug.Log("[D8-Planer Setup] ✓ AR Session erstellt");
+            try
+            {
+                arSessionObj.AddComponent<UnityEngine.XR.ARFoundation.ARSession>();
+                arSessionObj.AddComponent<UnityEngine.XR.ARFoundation.ARInputManager>();
+                Debug.Log("[D8-Planer Setup] ✓ AR Session erstellt");
+            }
+            catch (System.Exception ex)
+            {
+                arFoundationAvailable = false;
+                Debug.LogWarning($"[D8-Planer Setup] ⚠ AR Session konnte nicht erstellt werden. " +
+                    $"Stelle sicher, dass AR Foundation installiert ist. Fehler: {ex.Message}");
+            }
             
-            // 2. XR Origin erstellen
+            // 2. XR Origin erstellen (mit Fehlerbehandlung)
             GameObject xrOriginObj = new GameObject("XR Origin");
-            var xrOrigin = xrOriginObj.AddComponent<Unity.XR.CoreUtils.XROrigin>();
-            
-            // Camera Offset erstellen
             GameObject cameraOffset = new GameObject("Camera Offset");
             cameraOffset.transform.SetParent(xrOriginObj.transform);
-            xrOrigin.CameraFloorOffsetObject = cameraOffset;
             
             // AR Camera erstellen
             GameObject arCameraObj = new GameObject("AR Camera");
@@ -1035,22 +1084,55 @@ namespace D8PlanerXR.Editor
             arCamera.nearClipPlane = 0.1f;
             arCamera.farClipPlane = 100f;
             
-            arCameraObj.AddComponent<UnityEngine.XR.ARFoundation.ARCameraManager>();
-            arCameraObj.AddComponent<UnityEngine.XR.ARFoundation.ARCameraBackground>();
-            arCameraObj.AddComponent<UnityEngine.XR.ARFoundation.TrackedPoseDriver>();
+            try
+            {
+                var xrOrigin = xrOriginObj.AddComponent<Unity.XR.CoreUtils.XROrigin>();
+                xrOrigin.CameraFloorOffsetObject = cameraOffset;
+                xrOrigin.Camera = arCamera;
+                Debug.Log("[D8-Planer Setup] ✓ XR Origin erstellt");
+            }
+            catch (System.Exception ex)
+            {
+                xrCoreUtilsAvailable = false;
+                Debug.LogWarning($"[D8-Planer Setup] ⚠ XR Origin konnte nicht erstellt werden. " +
+                    $"Stelle sicher, dass XR Core Utilities installiert ist. Fehler: {ex.Message}");
+            }
             
-            xrOrigin.Camera = arCamera;
-            Debug.Log("[D8-Planer Setup] ✓ XR Origin mit AR Camera erstellt");
+            // AR Camera Manager Komponenten (mit Fehlerbehandlung)
+            if (arFoundationAvailable)
+            {
+                try
+                {
+                    arCameraObj.AddComponent<UnityEngine.XR.ARFoundation.ARCameraManager>();
+                    arCameraObj.AddComponent<UnityEngine.XR.ARFoundation.ARCameraBackground>();
+                    arCameraObj.AddComponent<UnityEngine.XR.ARFoundation.TrackedPoseDriver>();
+                    Debug.Log("[D8-Planer Setup] ✓ AR Camera Komponenten hinzugefügt");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[D8-Planer Setup] ⚠ AR Camera Komponenten konnten nicht hinzugefügt werden: {ex.Message}");
+                }
+            }
             
-            // 3. AR Plane Manager (optional, für erweiterte Features)
-            xrOriginObj.AddComponent<UnityEngine.XR.ARFoundation.ARPlaneManager>();
-            xrOriginObj.AddComponent<UnityEngine.XR.ARFoundation.ARRaycastManager>();
-            xrOriginObj.AddComponent<UnityEngine.XR.ARFoundation.ARAnchorManager>();
-            Debug.Log("[D8-Planer Setup] ✓ AR Manager Komponenten hinzugefügt");
+            // 3. AR Plane Manager (optional, für erweiterte Features, mit Fehlerbehandlung)
+            if (arFoundationAvailable)
+            {
+                try
+                {
+                    xrOriginObj.AddComponent<UnityEngine.XR.ARFoundation.ARPlaneManager>();
+                    xrOriginObj.AddComponent<UnityEngine.XR.ARFoundation.ARRaycastManager>();
+                    xrOriginObj.AddComponent<UnityEngine.XR.ARFoundation.ARAnchorManager>();
+                    Debug.Log("[D8-Planer Setup] ✓ AR Manager Komponenten hinzugefügt");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[D8-Planer Setup] ⚠ AR Manager Komponenten konnten nicht hinzugefügt werden: {ex.Message}");
+                }
+            }
             
-            // 4. App Controller erstellen (mit Typprüfung)
+            // 4. App Controller erstellen (mit flexibler Typsuche)
             GameObject appControllerObj = new GameObject("AppController");
-            System.Type appControllerType = System.Type.GetType(APP_CONTROLLER_TYPE);
+            System.Type appControllerType = TryGetType(APP_CONTROLLER_TYPENAME, APP_CONTROLLER_ASSEMBLIES);
             if (appControllerType != null)
             {
                 appControllerObj.AddComponent(appControllerType);
@@ -1062,9 +1144,9 @@ namespace D8PlanerXR.Editor
                     "Füge die Komponente manuell hinzu nach dem Kompilieren.");
             }
             
-            // 5. Device Mode Manager erstellen (mit Typprüfung)
+            // 5. Device Mode Manager erstellen (mit flexibler Typsuche)
             GameObject deviceModeObj = new GameObject("DeviceModeManager");
-            System.Type deviceModeType = System.Type.GetType(DEVICE_MODE_MANAGER_TYPE);
+            System.Type deviceModeType = TryGetType(DEVICE_MODE_MANAGER_TYPENAME, DEVICE_MODE_MANAGER_ASSEMBLIES);
             if (deviceModeType != null)
             {
                 deviceModeObj.AddComponent(deviceModeType);
@@ -1098,9 +1180,9 @@ namespace D8PlanerXR.Editor
             eventSystemObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             Debug.Log("[D8-Planer Setup] ✓ UI Canvas und EventSystem erstellt");
             
-            // 8. Virtual Deckzentrum Container erstellen (mit Typprüfung)
+            // 8. Virtual Deckzentrum Container erstellen (mit flexibler Typsuche)
             GameObject deckzentrumContainer = new GameObject("VirtualDeckzentrum Container");
-            System.Type virtualDeckzentrumType = System.Type.GetType(VIRTUAL_DECKZENTRUM_TYPE);
+            System.Type virtualDeckzentrumType = TryGetType(VIRTUAL_DECKZENTRUM_TYPENAME, VIRTUAL_DECKZENTRUM_ASSEMBLIES);
             if (virtualDeckzentrumType != null)
             {
                 deckzentrumContainer.AddComponent(virtualDeckzentrumType);
@@ -1121,6 +1203,13 @@ namespace D8PlanerXR.Editor
             
             AssetDatabase.Refresh();
             
+            // Warnungen in der Bestätigungsmeldung anzeigen
+            string warnings = "";
+            if (!arFoundationAvailable)
+                warnings += "\n⚠ AR Foundation nicht verfügbar - manuell hinzufügen!";
+            if (!xrCoreUtilsAvailable)
+                warnings += "\n⚠ XR Core Utilities nicht verfügbar - manuell hinzufügen!";
+            
             Debug.Log("[D8-Planer Setup] ✓ Hauptszene erfolgreich erstellt!");
             
             EditorUtility.DisplayDialog(
@@ -1132,7 +1221,7 @@ namespace D8PlanerXR.Editor
                 "• AppController\n" +
                 "• DeviceModeManager\n" +
                 "• UI Canvas\n" +
-                "• VirtualDeckzentrum Container",
+                "• VirtualDeckzentrum Container" + warnings,
                 "OK");
         }
         
