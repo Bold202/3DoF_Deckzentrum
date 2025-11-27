@@ -16,7 +16,7 @@ import os
 import sys
 
 class VentilQRGenerator:
-    def __init__(self):
+    def __init__(self, font_size=72):
         # QR-Code Einstellungen
         self.qr_size_mm = 45  # QR-Code Größe in mm
         self.label_height_mm = 35  # Textbereich unterhalb
@@ -41,6 +41,9 @@ class VentilQRGenerator:
         
         # Ausgabeordner
         self.output_folder = "QRCodes"
+        
+        # Schriftgröße für Label
+        self.font_size = font_size
         
     def generate_qr_code(self, ventil_number):
         """
@@ -83,8 +86,8 @@ class VentilQRGenerator:
         # Text hinzufügen
         draw = ImageDraw.Draw(final_img)
         
-        # Schriftgröße berechnen (groß und gut lesbar)
-        font_size = int(self.label_height_px * 0.6)
+        # Schriftgröße (groß und gut lesbar)
+        font_size = self.font_size
         
         try:
             # Versuche System-Schriftart zu laden
@@ -172,6 +175,27 @@ class VentilQRGenerator:
         return success_count, error_count
 
 
+def ask_font_size():
+    """
+    Fragt den Benutzer nach der gewünschten Schriftgröße
+    """
+    print("Wie groß soll die Schriftgröße der Nummer unter dem QR-Code sein?")
+    print("(Standard: 72, Eingabe ohne Wert übernimmt Standard)")
+    
+    while True:
+        try:
+            user_input = input("Schriftgröße: ").strip()
+            if user_input == "":
+                return 72  # Standardwert
+            font_size = int(user_input)
+            if font_size < 1 or font_size > 500:
+                print("Bitte eine Zahl zwischen 1 und 500 eingeben.")
+                continue
+            return font_size
+        except ValueError:
+            print("Bitte eine gültige Zahl eingeben.")
+
+
 def main():
     """
     Hauptfunktion - Kommandozeilen-Interface
@@ -181,8 +205,13 @@ def main():
     print("=" * 60)
     print()
     
+    # Schriftgröße abfragen
+    font_size = ask_font_size()
+    print(f"Verwende Schriftgröße: {font_size}")
+    print()
+    
     # Generator erstellen
-    generator = VentilQRGenerator()
+    generator = VentilQRGenerator(font_size=font_size)
     
     # Argumente prüfen
     if len(sys.argv) > 1:
