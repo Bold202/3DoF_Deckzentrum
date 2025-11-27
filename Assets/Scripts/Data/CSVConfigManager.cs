@@ -265,6 +265,16 @@ namespace D8PlanerXR.Data
         }
 
         /// <summary>
+        /// Lädt die MusterPlan-Konfiguration für DB Sauenplaner Export
+        /// </summary>
+        public void LoadMusterPlanConfig()
+        {
+            currentConfig = CSVColumnConfig.CreateMusterPlanConfig();
+            SaveCurrentConfig();
+            Debug.Log("MusterPlan-Konfiguration geladen");
+        }
+
+        /// <summary>
         /// Klont eine Konfiguration
         /// </summary>
         private CSVColumnConfig CloneConfig(CSVColumnConfig source)
