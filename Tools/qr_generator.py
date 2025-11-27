@@ -13,12 +13,13 @@ from pathlib import Path
 class VentilQRCodeGenerator:
     """QR-Code Generator für Ventilnummern"""
     
-    def __init__(self, output_dir="QRCodes"):
+    def __init__(self, output_dir="QRCodes", font_size=72):
         """
         Initialisiert den Generator
         
         Args:
             output_dir: Ausgabeverzeichnis für QR-Codes
+            font_size: Schriftgröße für die Nummer unter dem QR-Code
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
@@ -35,6 +36,9 @@ class VentilQRCodeGenerator:
         # Datei-Optionen
         self.file_prefix = "Ventil_"
         self.file_extension = ".png"
+        
+        # Schriftgröße für Label
+        self.font_size = font_size
         
     def generate_single_qr(self, ventil_number, add_label=True):
         """
@@ -82,9 +86,13 @@ class VentilQRCodeGenerator:
         Returns:
             PIL.Image: QR-Code mit Label
         """
+        # QR-Code in RGB konvertieren falls nötig
+        if qr_image.mode != 'RGB':
+            qr_image = qr_image.convert('RGB')
+        
         # Dimensionen
         qr_width, qr_height = qr_image.size
-        label_height = 60
+        label_height = 100  # Erhöht für größere Schriftgröße
         total_height = qr_height + label_height
         
         # Neues Bild mit Platz für Label
@@ -99,10 +107,10 @@ class VentilQRCodeGenerator:
         
         # Versuche Font zu laden, sonst Standardfont
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.font_size)
         except:
             try:
-                font = ImageFont.truetype("arial.ttf", 40)
+                font = ImageFont.truetype("arial.ttf", self.font_size)
             except:
                 font = ImageFont.load_default()
         
@@ -157,6 +165,27 @@ class VentilQRCodeGenerator:
         print(f"Erfolgreich: {success_count}, Fehler: {error_count}")
         print(f"Dateien gespeichert in: {self.output_dir.absolute()}")
 
+def ask_font_size():
+    """
+    Fragt den Benutzer nach der gewünschten Schriftgröße
+    """
+    print("Wie groß soll die Schriftgröße der Nummer unter dem QR-Code sein?")
+    print("(Standard: 72, Eingabe ohne Wert übernimmt Standard)")
+    
+    while True:
+        try:
+            user_input = input("Schriftgröße: ").strip()
+            if user_input == "":
+                return 72  # Standardwert
+            font_size = int(user_input)
+            if font_size < 1 or font_size > 500:
+                print("Bitte eine Zahl zwischen 1 und 500 eingeben.")
+                continue
+            return font_size
+        except ValueError:
+            print("Bitte eine gültige Zahl eingeben.")
+
+
 def main():
     """Hauptfunktion"""
     import argparse
@@ -167,11 +196,20 @@ def main():
     parser.add_argument('--output', type=str, default='QRCodes', help='Ausgabeverzeichnis (default: QRCodes)')
     parser.add_argument('--no-label', action='store_true', help='Keine menschenlesbare Nummer hinzufügen')
     parser.add_argument('--single', type=int, help='Nur einen einzelnen QR-Code generieren')
+    parser.add_argument('--font-size', type=int, help='Schriftgröße für die Nummer (default: fragt interaktiv)')
     
     args = parser.parse_args()
     
+    # Schriftgröße bestimmen
+    if args.font_size:
+        font_size = args.font_size
+    else:
+        font_size = ask_font_size()
+    
+    print(f"Verwende Schriftgröße: {font_size}")
+    
     # Generator erstellen
-    generator = VentilQRCodeGenerator(output_dir=args.output)
+    generator = VentilQRCodeGenerator(output_dir=args.output, font_size=font_size)
     
     if args.single:
         # Einzelner QR-Code
