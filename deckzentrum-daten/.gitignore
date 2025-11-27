@@ -1,0 +1,34 @@
+# Ignoriert temporäre Dateien
+*.tmp
+*.temp
+*~
+
+# Ignoriert Backup-Dateien
+*.bak
+*.backup
+
+# Ignoriert System-Dateien
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Ignoriert Editor-Dateien
+*.swp
+*.swo
+.idea/
+.vscode/
+*.sublime-*
+
+# Ignoriert Log-Dateien
+*.log
+
+# Ignoriert persönliche Notizen
+notes.txt
+TODO.txt
+
+# Behält data/ Ordner-Struktur bei
+!data/
+!data/*.csv
