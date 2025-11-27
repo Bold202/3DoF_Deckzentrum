@@ -132,12 +132,30 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 
 | Dokument | Beschreibung |
 |----------|--------------|
+| [UNITY_SETUP_ANLEITUNG.md](UNITY_SETUP_ANLEITUNG.md) | **🆕 Unity-Einrichtung** mit Setup-Wizard und automatischem Build |
 | [APK_BUILD_ANLEITUNG.md](APK_BUILD_ANLEITUNG.md) | **Vollständige APK-Build-Anleitung** für Android-Geräte |
 | [HANDY_MODUS_ANLEITUNG.md](HANDY_MODUS_ANLEITUNG.md) | **Benutzerhandbuch für Handy-Modus** (ohne VR-Hardware) |
 | [FRAGENKATALOG.md](FRAGENKATALOG.md) | **100+ Fragen** in 12 Kategorien zu allen Projektaspekten |
 | [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) | Vollständige Implementierungsanleitung mit Setup, Prefabs, Testing |
 | [CSV_EXAMPLES.md](CSV_EXAMPLES.md) | CSV-Format-Beispiele und Import-Anleitung |
 | [Tools/README.md](Tools/README.md) | QR-Code Generator Tool Dokumentation |
+
+## 🚀 Ein-Klick APK Build
+
+Für schnellen APK-Export ohne Unity öffnen zu müssen:
+
+**Windows:**
+```batch
+build_apk.bat
+```
+
+**macOS/Linux:**
+```bash
+chmod +x build_apk.sh
+./build_apk.sh
+```
+
+Die APK wird automatisch auf deinem Desktop gespeichert!
 
 ## 🎯 Features im Detail
 
