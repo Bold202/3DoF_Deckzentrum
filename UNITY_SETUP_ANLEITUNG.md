@@ -84,7 +84,7 @@ cd 3DoF_Deckzentrum
 1. Klicke auf das Projekt in der Liste
 2. Wähle **Unity 2022.3 LTS** als Editor-Version
 3. Klicke **Open**
-4. **WARTE** - Erster Import dauert 5-15 Minuten!
+4. ⏳ **Bitte warten** - Der erste Import dauert 5-15 Minuten!
 
 ---
 
