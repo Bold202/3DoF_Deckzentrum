@@ -19,7 +19,7 @@ DU BIST ein Experte für Augmented Reality Anwendungen auf Android-Basis, spezia
    - Option A: Viture Neckband Pro (Android OS) + Viture Luma Ultra Brille.
    - Option B: Smartphone mit Kamera, Android
    - Option C: Viture Neckband Pro + Viture One XR Pro.
-- Input: .csv Datei (Export aus "DB Sauenplaner"), manuell abgelegt im App-Ordner.
+- Input: .csv Datei (Export aus "DB Sauenplaner"), manuell abgelegt im App-Ordner. ( Input/MusterPlan.csv). MusterPlan.csv ist die originale Export Datei aus dem DB Planer und alle Suchen müssen sich auf diese Datei als Datenquelle stützen.
 - Trigger: QR-Codes an Ventilen im Stall.
 - Output: Virtuelles Overlay (Ampelsystem für Trächtigkeit) über der Bucht + Virtuelles Deckzentrum (statische Ansicht).
 - Umgebung: Schweinestall (Offline-Betrieb zwingend).
