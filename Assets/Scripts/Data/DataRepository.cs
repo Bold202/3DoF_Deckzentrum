@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace D8PlanerXR.Data
@@ -63,6 +64,9 @@ namespace D8PlanerXR.Data
         
         // Zusätzlicher Index: Key = Ohrmarkennummer
         private Dictionary<string, SowData> earTagToSowMap = new Dictionary<string, SowData>();
+
+        // Compiled regex for number extraction (performance optimization)
+        private static readonly Regex NumbersOnlyRegex = new Regex(@"[^\d]", RegexOptions.Compiled);
 
         // Statistiken
         public int TotalSows { get; private set; }
@@ -207,8 +211,8 @@ namespace D8PlanerXR.Data
                         string ventilStr = CleanValue(values[ventilColumnIndex]);
                         if (!int.TryParse(ventilStr, out sowData.ventilNumber))
                         {
-                            // Versuche nur Zahlen zu extrahieren
-                            string numbersOnly = System.Text.RegularExpressions.Regex.Replace(ventilStr, @"[^\d]", "");
+                            // Versuche nur Zahlen zu extrahieren (using compiled regex for performance)
+                            string numbersOnly = NumbersOnlyRegex.Replace(ventilStr, "");
                             if (!int.TryParse(numbersOnly, out sowData.ventilNumber))
                             {
                                 if (i == startLine) // Nur bei der ersten Datenzeile warnen

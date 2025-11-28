@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using ZXing;
 using D8PlanerXR.Core;
 using D8PlanerXR.Data;
@@ -31,11 +32,11 @@ namespace D8PlanerXR.Mobile
         [Header("UI References")]
         [SerializeField] private GameObject overlayContainer;
         [SerializeField] private GameObject ventilInfoPanel;
-        [SerializeField] private TMPro.TextMeshProUGUI ventilNumberText;
-        [SerializeField] private TMPro.TextMeshProUGUI sowInfoText;
+        [SerializeField] private TextMeshProUGUI ventilNumberText;
+        [SerializeField] private TextMeshProUGUI sowInfoText;
         [SerializeField] private Image trafficLightImage;
-        [SerializeField] private TMPro.TextMeshProUGUI statusText;
-        [SerializeField] private TMPro.TextMeshProUGUI debugText;
+        [SerializeField] private TextMeshProUGUI statusText;
+        [SerializeField] private TextMeshProUGUI debugText;
         
         [Header("Colors")]
         [SerializeField] private Color greenColor = new Color(0.2f, 0.8f, 0.2f);

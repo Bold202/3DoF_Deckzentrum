@@ -20,11 +20,11 @@ namespace D8PlanerXR.Mobile
         [SerializeField] private Button menuButton;
         [SerializeField] private Button loadCSVButton;
         [SerializeField] private Button settingsButton;
-        [SerializeField] private TMPro.TextMeshProUGUI appTitleText;
+        [SerializeField] private TextMeshProUGUI appTitleText;
         
         [Header("Info Panel")]
         [SerializeField] private GameObject infoPanel;
-        [SerializeField] private TMPro.TextMeshProUGUI infoText;
+        [SerializeField] private TextMeshProUGUI infoText;
         
         [Header("Settings")]
         [SerializeField] private bool autoLoadDefaultCSV = true;
