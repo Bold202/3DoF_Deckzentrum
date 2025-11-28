@@ -298,6 +298,22 @@ namespace D8PlanerXR.Data
         /// </summary>
         private void AddSowData(SowData sowData)
         {
+            AddSowDataInternal(sowData);
+        }
+
+        /// <summary>
+        /// Fügt eine Sau zu den Daten hinzu (öffentlich für SowDatabase)
+        /// </summary>
+        public void AddSowDataPublic(SowData sowData)
+        {
+            AddSowDataInternal(sowData);
+        }
+
+        /// <summary>
+        /// Interne Methode zum Hinzufügen von Sau-Daten
+        /// </summary>
+        private void AddSowDataInternal(SowData sowData)
+        {
             // Zu Ventil-Map hinzufügen
             if (!ventilToSowsMap.ContainsKey(sowData.ventilNumber))
             {
@@ -312,8 +328,12 @@ namespace D8PlanerXR.Data
             }
             else
             {
-                Debug.LogWarning($"Doppelte Ohrmarkennummer gefunden: {sowData.earTagNumber}");
+                // Update existing entry if newer
+                earTagToSowMap[sowData.earTagNumber] = sowData;
             }
+            
+            // Update statistics
+            UpdateStatistics();
         }
 
         /// <summary>

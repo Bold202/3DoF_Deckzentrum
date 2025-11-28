@@ -49,7 +49,13 @@ namespace D8PlanerXR.Mobile
         {
             InitializeScene();
             
-            if (autoLoadDefaultCSV)
+            // Try to sync from database first, then load default CSV if needed
+            if (Data.SowDatabase.Instance != null && Data.SowDatabase.Instance.TotalRecords > 0)
+            {
+                Data.SowDatabase.Instance.SyncToDataRepository();
+                ShowInfo($"Datenbank geladen: {Data.SowDatabase.Instance.TotalRecords} Datensätze");
+            }
+            else if (autoLoadDefaultCSV)
             {
                 LoadDefaultCSV();
             }
@@ -62,6 +68,12 @@ namespace D8PlanerXR.Mobile
             {
                 cameraController.OnVentilDetected += OnVentilDetected;
             }
+            
+            // Subscribe to database events
+            if (Data.SowDatabase.Instance != null)
+            {
+                Data.SowDatabase.Instance.OnDatabaseUpdated += OnDatabaseUpdated;
+            }
         }
         
         private void OnDestroy()
@@ -69,6 +81,23 @@ namespace D8PlanerXR.Mobile
             if (cameraController != null)
             {
                 cameraController.OnVentilDetected -= OnVentilDetected;
+            }
+            
+            if (Data.SowDatabase.Instance != null)
+            {
+                Data.SowDatabase.Instance.OnDatabaseUpdated -= OnDatabaseUpdated;
+            }
+        }
+        
+        /// <summary>
+        /// Called when database is updated
+        /// </summary>
+        private void OnDatabaseUpdated()
+        {
+            if (Data.SowDatabase.Instance != null)
+            {
+                Data.SowDatabase.Instance.SyncToDataRepository();
+                ShowInfo($"Daten aktualisiert: {Data.SowDatabase.Instance.TotalRecords} Datensätze");
             }
         }
         
@@ -148,7 +177,8 @@ namespace D8PlanerXR.Mobile
                     // Auto-configure CSV columns for MusterPlan format
                     ConfigureCSVColumnsForMusterPlan();
                     
-                    bool success = DataRepository.Instance.ImportCSV(path);
+                    // Import to database (which will also sync to DataRepository)
+                    bool success = Data.SowDatabase.Instance.ImportFromCSV(path);
                     if (success)
                     {
                         Debug.Log($"[MobileSceneManager] CSV loaded successfully: {DataRepository.Instance.TotalSows} Sauen, {DataRepository.Instance.TotalVentils} Ventile");
