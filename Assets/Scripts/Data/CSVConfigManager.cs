@@ -404,6 +404,18 @@ namespace D8PlanerXR.Data
         }
 
         /// <summary>
+        /// Setzt die aktuelle Konfiguration direkt
+        /// </summary>
+        public void SetConfig(CSVColumnConfig config)
+        {
+            if (config != null)
+            {
+                currentConfig = config;
+                Debug.Log($"Konfiguration gesetzt: {config.configName}");
+            }
+        }
+
+        /// <summary>
         /// Importiert eine Konfiguration aus JSON-String
         /// </summary>
         public bool ImportConfigFromJson(string json)

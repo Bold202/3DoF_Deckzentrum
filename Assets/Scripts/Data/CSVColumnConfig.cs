@@ -210,6 +210,17 @@ namespace D8PlanerXR.Data
         /// <summary>
         /// Erstellt eine Konfiguration für MusterPlan.csv (DB Sauenplaner Export)
         /// Basierend auf der Referenzdatei in Import/MusterPlan.csv
+        /// 
+        /// CSV Format Analyse:
+        /// Header: "Stichtag";"Abf.";"Wochen bis";"Sau-Nr.";"[Datum]";"TK";"Bucht";"Bel.Datum";"TRT";"Gruppe";"Eber";"Wurf";"Umr.";"vorauss.";"Abferkelung";"index";"Prod.";"Ampel"
+        /// Daten:  " -3";"     602";"+";"165   ";"13.07.2025";" 134";"202529";"    M 88";"11";"  ";" ";"";"05.11.2025";"29.6"
+        /// 
+        /// Wichtige Spalten für die App:
+        /// - Index 1 ("Abf.") = Ohrmarkennummer (z.B. "602")
+        /// - Index 3 ("Sau-Nr.") = Ventil/Bucht-Nummer für Zuordnung (z.B. "165")
+        /// - Index 4 (dynamisches Datum) = Belegdatum (z.B. "13.07.2025")
+        /// - Index 5 ("TK") = Tage trächtig (z.B. "134")
+        /// - Index 6 ("Bucht") = Gruppen-Nummer (z.B. "202529")
         /// </summary>
         public static CSVColumnConfig CreateMusterPlanConfig()
         {
@@ -219,75 +230,109 @@ namespace D8PlanerXR.Data
             config.hasHeader = true;
             config.encoding = "UTF-8";
             
-            // Spalten gemäß MusterPlan.csv Header:
-            // "Stichtag";"Abf.";"Wochen bis";"Sau-Nr.";"[Datum]";"TK";"Bucht";"Bel.Datum";"TRT";"Gruppe";"Eber";"Wurf";"Umr.";"vorauss.";"Abferkelung";"index";"Prod.";"Ampel"
+            // Index 0: Stichtag (Wochen bis Abferkelung relative Angabe)
+            var stichtag = new ColumnDefinition("Stichtag", ColumnType.Text, ColumnRole.None);
+            stichtag.displayName = "Stichtag";
+            stichtag.isVisible = false;
+            stichtag.displayOrder = 0;
+            config.columns.Add(stichtag);
             
-            // Spalte 1: Stichtag (Wochen bis Abferkelung)
-            config.AddColumn("Stichtag", ColumnType.Text, ColumnRole.None);
-            config.columns[0].isVisible = false;
+            // Index 1: Abf. = Ohrmarkennummer (WICHTIG!)
+            var ohrmarke = new ColumnDefinition("Abf.", ColumnType.Text, ColumnRole.EarTagNumber);
+            ohrmarke.displayName = "Ohrmarke";
+            ohrmarke.isVisible = true;
+            ohrmarke.displayOrder = 1;
+            config.columns.Add(ohrmarke);
             
-            // Spalte 2: Abf. = Sauen Nr. (Ohrmarkennummer)
-            config.AddColumn("Abf.", ColumnType.Text, ColumnRole.EarTagNumber);
+            // Index 2: Wochen bis = Status-Indikator (+ oder leer)
+            var wochenBis = new ColumnDefinition("Wochen bis", ColumnType.Text, ColumnRole.None);
+            wochenBis.displayName = "Status";
+            wochenBis.isVisible = false;
+            wochenBis.displayOrder = 2;
+            config.columns.Add(wochenBis);
             
-            // Spalte 3: Wochen bis (Status-Indikator)
-            config.AddColumn("Wochen bis", ColumnType.Text, ColumnRole.PregnancyStatus);
+            // Index 3: Sau-Nr. = Ventil/Bucht-Nummer für QR-Code Zuordnung (WICHTIG!)
+            var sauNr = new ColumnDefinition("Sau-Nr.", ColumnType.Number, ColumnRole.VentilNumber);
+            sauNr.displayName = "Bucht (Ventil)";
+            sauNr.isVisible = true;
+            sauNr.displayOrder = 3;
+            config.columns.Add(sauNr);
             
-            // Spalte 4: Sau-Nr. = VentilNr/Bucht für Zuordnung
-            config.AddColumn("Sau-Nr.", ColumnType.Number, ColumnRole.VentilNumber);
-            
-            // Spalte 5: Dynamisches Datum = Belegdatum
+            // Index 4: Dynamisches Datum = Belegdatum (WICHTIG!)
             // HINWEIS: Der CSV-Header enthält ein dynamisches Datum (z.B. "24.11.2025")
-            // das sich bei jedem Export ändert. Wir verwenden einen generischen Placeholder.
-            // Der Import muss diese Spalte per Index (4) identifizieren, nicht per Name.
-            config.AddColumn("Belegdatum_Spalte5", ColumnType.Date, ColumnRole.MatingDate);
+            // das sich bei jedem Export ändert.
+            var belegdatum = new ColumnDefinition("Belegdatum_Spalte5", ColumnType.Date, ColumnRole.MatingDate);
+            belegdatum.displayName = "Belegdatum";
+            belegdatum.isVisible = true;
+            belegdatum.displayOrder = 4;
+            config.columns.Add(belegdatum);
             
-            // Spalte 6: TK = Trächtigkeitstag
-            config.AddColumn("TK", ColumnType.Number, ColumnRole.None);
+            // Index 5: TK = Tage trächtig (WICHTIG!)
+            var tk = new ColumnDefinition("TK", ColumnType.Number, ColumnRole.None);
+            tk.displayName = "Tage trächtig";
+            tk.isVisible = true;
+            tk.displayOrder = 5;
+            config.columns.Add(tk);
             
-            // Spalte 7: Bucht = Gruppen-/Chargen-Nummer
-            config.AddColumn("Bucht", ColumnType.Text, ColumnRole.None);
+            // Index 6: Bucht = Gruppen-/Chargen-Nummer
+            var bucht = new ColumnDefinition("Bucht", ColumnType.Text, ColumnRole.None);
+            bucht.displayName = "Gruppe";
+            bucht.isVisible = false;
+            bucht.displayOrder = 6;
+            config.columns.Add(bucht);
             
-            // Spalte 8: Bel.Datum = Eber-Name
-            config.AddColumn("Bel.Datum", ColumnType.Text, ColumnRole.None);
+            // Index 7: Bel.Datum = Eber-Name
+            var eber = new ColumnDefinition("Bel.Datum", ColumnType.Text, ColumnRole.None);
+            eber.displayName = "Eber";
+            eber.isVisible = false;
+            eber.displayOrder = 7;
+            config.columns.Add(eber);
             
-            // Spalte 9: TRT (Wurf-Anzahl)
-            config.AddColumn("TRT", ColumnType.Number, ColumnRole.None);
-            config.columns[8].isVisible = false;
+            // Index 8: TRT (Wurf-Anzahl)
+            var trt = new ColumnDefinition("TRT", ColumnType.Number, ColumnRole.None);
+            trt.displayName = "Wurf-Nr.";
+            trt.isVisible = false;
+            trt.displayOrder = 8;
+            config.columns.Add(trt);
             
-            // Spalte 10: Gruppe
-            config.AddColumn("Gruppe", ColumnType.Text, ColumnRole.None);
-            config.columns[9].isVisible = false;
+            // Index 9: Gruppe
+            var gruppe = new ColumnDefinition("Gruppe", ColumnType.Text, ColumnRole.None);
+            gruppe.displayName = "Gruppe-Code";
+            gruppe.isVisible = false;
+            gruppe.displayOrder = 9;
+            config.columns.Add(gruppe);
             
-            // Spalte 11: Eber
-            config.AddColumn("Eber", ColumnType.Text, ColumnRole.None);
-            config.columns[10].isVisible = false;
+            // Index 10: Eber
+            var eberNr = new ColumnDefinition("Eber", ColumnType.Text, ColumnRole.None);
+            eberNr.displayName = "Eber-Nr.";
+            eberNr.isVisible = false;
+            eberNr.displayOrder = 10;
+            config.columns.Add(eberNr);
             
-            // Spalte 12: Wurf
-            config.AddColumn("Wurf", ColumnType.Text, ColumnRole.None);
-            config.columns[11].isVisible = false;
+            // Index 11: Wurf
+            var wurf = new ColumnDefinition("Wurf", ColumnType.Text, ColumnRole.None);
+            wurf.isVisible = false;
+            wurf.displayOrder = 11;
+            config.columns.Add(wurf);
             
-            // Spalte 13: Umr.
-            config.AddColumn("Umr.", ColumnType.Text, ColumnRole.None);
-            config.columns[12].isVisible = false;
+            // Index 12: Umr.
+            var umr = new ColumnDefinition("Umr.", ColumnType.Text, ColumnRole.None);
+            umr.isVisible = false;
+            umr.displayOrder = 12;
+            config.columns.Add(umr);
             
-            // Spalte 14: vorauss.
-            config.AddColumn("vorauss.", ColumnType.Date, ColumnRole.BirthDate);
+            // Index 13: vorauss. = Voraussichtliches Abferkeldatum
+            var vorauss = new ColumnDefinition("vorauss.", ColumnType.Date, ColumnRole.BirthDate);
+            vorauss.displayName = "Vorauss. Abferkelung";
+            vorauss.isVisible = true;
+            vorauss.displayOrder = 13;
+            config.columns.Add(vorauss);
             
-            // Spalte 15: Abferkelung
-            config.AddColumn("Abferkelung", ColumnType.Text, ColumnRole.None);
-            config.columns[14].isVisible = false;
-            
-            // Spalte 16: index
-            config.AddColumn("index", ColumnType.Text, ColumnRole.None);
-            config.columns[15].isVisible = false;
-            
-            // Spalte 17: Prod.
-            config.AddColumn("Prod.", ColumnType.Text, ColumnRole.None);
-            config.columns[16].isVisible = false;
-            
-            // Spalte 18: Ampel
-            config.AddColumn("Ampel", ColumnType.Text, ColumnRole.None);
-            config.columns[17].isVisible = false;
+            // Index 14: Abferkelung
+            var abferkelung = new ColumnDefinition("Abferkelung", ColumnType.Text, ColumnRole.None);
+            abferkelung.isVisible = false;
+            abferkelung.displayOrder = 14;
+            config.columns.Add(abferkelung);
             
             config.lastModified = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             return config;

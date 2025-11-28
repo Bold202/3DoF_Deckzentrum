@@ -1,7 +1,7 @@
 # 3DoF_Deckzentrum - D8-Planer XR
 
 > **Augmented Reality Anwendung für das Schweinedeckzentrum**  
-> Viture Neckband Pro + Viture Luma Ultra Brille
+> Viture Neckband Pro + Viture Luma Ultra Brille + Android Smartphone
 
 [![Unity](https://img.shields.io/badge/Unity-2022.3%20LTS-blue)](https://unity.com/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green)](https://www.android.com/)
@@ -11,29 +11,33 @@
 
 Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentrum mittels Augmented Reality. Während der Arbeit im Stall werden automatisch Informationen zu den Sauen an jedem Ventil als virtuelles Overlay eingeblendet.
 
-**NEU in Version 1.1:** 📱 **Handy-Modus** - Die App kann jetzt auch auf normalen Smartphones ohne VR-Hardware genutzt werden!
+**NEU in Version 1.2:** 📱 **Mobile-First Entwicklung** - Der Handy-Modus wurde priorisiert und verwendet eine vereinfachte, zuverlässigere Kamera-Implementierung!
 
 ### Kernfunktionen
 
-✅ **Dual-Mode Support**
+✅ **Dual-Mode Support (Mobile-First)**
+- 📱 **Handy-Modus (Priorität)** - Einfache WebCam-basierte QR-Erkennung für alle Android-Smartphones
 - 🕶️ VR-Modus für Viture Neckband Pro + Luma Ultra
-- 📱 Handy-Modus für normale Android-Smartphones
 - 🔄 Automatische Hardware-Erkennung
 
-✅ **QR-Code basierte AR-Erkennung**
+✅ **QR-Code basierte Ventil-Erkennung**
 - Automatische Erkennung von Ventilen via QR-Code
-- Virtuelle Overlays unter jedem Ventil
+- Virtuelle Overlays mit Sau-Informationen
+- Haptic-Feedback bei erfolgreicher Erkennung
 - Spatial Anchoring für stabile Anzeige (VR-Modus)
 
 ✅ **Intelligentes Ampelsystem**
-- Grün/Gelb/Rot basierend auf Trächtigkeitsstatus
+- 🟢 Grün: <80 Tage tragend
+- 🟡 Gelb: 80-106 Tage tragend  
+- 🔴 Rot: 107+ Tage (kurz vor Abferkelung)
+- 🟣 Lila: Medikation erforderlich
 - Automatische Berechnung der Tage seit Deckung
 - Prioritätsbasierte Sortierung (Rot zuerst)
 
-✅ **Flexibles CSV-Management**
-- Konfigurierbare Spalten-Struktur
-- Import/Export von Konfigurationsprofilen
-- Unterstützung für verschiedene CSV-Formate (Delimiter, Encoding)
+✅ **MusterPlan.csv Support**
+- Direkter Import aus DB Sauenplaner Export
+- Automatische Spalten-Zuordnung für MusterPlan-Format
+- Unterstützung für Anführungszeichen in CSV-Dateien
 - Fehlertoleranter Parser
 
 ✅ **Offline-First Design**
@@ -53,21 +57,28 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 3DoF_Deckzentrum/
 ├── Assets/
 │   ├── Scripts/
-│   │   ├── Core/              # AppController
+│   │   ├── Core/              # AppController, DeviceModeManager
 │   │   ├── Data/              # CSV-Verwaltung, DataRepository
-│   │   ├── AR/                # QR-Tracking, Overlays
-│   │   ├── UI/                # CSV-Spalten-Menü
+│   │   ├── AR/                # QR-Tracking, Overlays (VR-Modus)
+│   │   ├── Mobile/            # MobileCameraController, MobileSceneManager (Handy-Modus)
+│   │   ├── UI/                # CSV-Spalten-Menü, ModeSelection
 │   │   ├── QRCode/            # QR-Generator (Unity)
 │   │   └── Utils/             # Hilfsfunktionen
+│   ├── Editor/                # Unity Editor Tools
+│   │   ├── MobileSceneCreator.cs   # Erstellt Mobile-Szene
+│   │   └── UnityProjectSetup.cs    # Setup-Wizard
 │   ├── Scenes/                # Unity-Szenen
 │   ├── Prefabs/               # UI-Prefabs
 │   └── Resources/             # Assets
+├── Import/
+│   └── MusterPlan.csv         # Beispiel CSV-Datei (DB Sauenplaner Export)
 ├── Tools/
 │   ├── qr_generator.py        # Standalone QR-Generator
 │   └── README.md              # Tool-Dokumentation
-├── FRAGENKATALOG.md           # Umfassender Fragenkatalog (12 Kategorien, 100+ Fragen)
+├── FRAGENKATALOG.md           # Umfassender Fragenkatalog
 ├── IMPLEMENTATION_GUIDE.md    # Detaillierte Implementierungsanleitung
 ├── CSV_EXAMPLES.md            # CSV-Format-Beispiele
+├── HANDY_MODUS_ANLEITUNG.md   # Handy-Modus Benutzerhandbuch
 └── README.md                  # Diese Datei
 ```
 
@@ -78,8 +89,8 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 - Unity 2022.3 LTS oder höher
 - Android SDK (API Level 24+)
 - Python 3.6+ (für QR-Generator Tool)
+- **Empfohlen:** Android-Smartphone mit Kamera (für Handy-Modus)
 - **Optional:** Viture Neckband Pro + Luma Ultra Brille (für VR-Modus)
-- **Alternativ:** Android-Smartphone mit ARCore-Support (für Handy-Modus)
 
 ### Installation
 

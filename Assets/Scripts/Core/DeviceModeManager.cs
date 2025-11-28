@@ -26,6 +26,7 @@ namespace D8PlanerXR.Core
         [Header("Modus-Einstellungen")]
         [SerializeField] private DeviceMode deviceMode = DeviceMode.Auto;
         [SerializeField] private bool allowManualModeSwitch = true;
+        [SerializeField] private bool forceMobileMode = true; // Force mobile mode for testing
         
         [Header("VR-Modus Features")]
         [SerializeField] private bool enableSpatialAnchoring = true;
@@ -84,7 +85,16 @@ namespace D8PlanerXR.Core
         /// </summary>
         private void InitializeDeviceMode()
         {
-            if (deviceMode == DeviceMode.Auto)
+            // Force mobile mode if flag is set (for prioritized mobile development)
+            if (forceMobileMode)
+            {
+                currentActiveMode = DeviceMode.MobileMode;
+                if (showDebugInfo)
+                {
+                    Debug.Log("[DeviceModeManager] Mobile-Modus erzwungen (forceMobileMode = true)");
+                }
+            }
+            else if (deviceMode == DeviceMode.Auto)
             {
                 // Automatische Erkennung
                 currentActiveMode = DetectDeviceMode();

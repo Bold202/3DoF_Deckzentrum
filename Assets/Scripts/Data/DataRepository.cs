@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace D8PlanerXR.Data
@@ -64,6 +65,9 @@ namespace D8PlanerXR.Data
         // Zusätzlicher Index: Key = Ohrmarkennummer
         private Dictionary<string, SowData> earTagToSowMap = new Dictionary<string, SowData>();
 
+        // Compiled regex for number extraction (performance optimization)
+        private static readonly Regex NumbersOnlyRegex = new Regex(@"[^\d]", RegexOptions.Compiled);
+
         // Statistiken
         public int TotalSows { get; private set; }
         public int TotalVentils { get; private set; }
@@ -117,10 +121,18 @@ namespace D8PlanerXR.Data
                 CSVColumnConfig config = CSVConfigManager.Instance.CurrentConfig;
                 if (config == null)
                 {
-                    string error = "Keine CSV-Konfiguration geladen!";
-                    Debug.LogError(error);
-                    OnImportError?.Invoke(error);
-                    return false;
+                    // Create default MusterPlan config if none exists
+                    Debug.Log("[DataRepository] Keine Konfiguration gefunden, erstelle MusterPlan-Konfiguration...");
+                    CSVConfigManager.Instance.LoadMusterPlanConfig();
+                    config = CSVConfigManager.Instance.CurrentConfig;
+                    
+                    if (config == null)
+                    {
+                        string error = "Keine CSV-Konfiguration geladen!";
+                        Debug.LogError(error);
+                        OnImportError?.Invoke(error);
+                        return false;
+                    }
                 }
 
                 // Encoding festlegen
@@ -141,7 +153,7 @@ namespace D8PlanerXR.Data
 
                 if (config.hasHeader)
                 {
-                    headers = lines[0].Split(config.delimiter);
+                    headers = ParseCSVLine(lines[0], config.delimiter);
                 }
                 else
                 {
@@ -152,11 +164,13 @@ namespace D8PlanerXR.Data
                         headers[i] = config.columns[i].originalName;
                     }
                 }
+                
+                Debug.Log($"[DataRepository] CSV Header mit {headers.Length} Spalten geladen");
 
-                // Spalten-Indizes ermitteln
-                int ventilColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.VentilNumber));
-                int earTagColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.EarTagNumber));
-                int matingDateColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.MatingDate));
+                // Spalten-Indizes ermitteln - für MusterPlan verwende Index-basierte Zuordnung
+                int ventilColumnIndex = GetColumnIndexWithFallback(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.VentilNumber), 3);
+                int earTagColumnIndex = GetColumnIndexWithFallback(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.EarTagNumber), 1);
+                int matingDateColumnIndex = GetColumnIndexWithFallback(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.MatingDate), 4);
                 int pregnancyStatusColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.PregnancyStatus));
                 int healthStatusColumnIndex = GetColumnIndex(headers, config.GetColumnByRole(CSVColumnConfig.ColumnRole.HealthStatus));
 
@@ -164,9 +178,12 @@ namespace D8PlanerXR.Data
                 {
                     string error = "Erforderliche Spalten (Ventilnummer, Ohrmarkennummer) nicht gefunden!";
                     Debug.LogError(error);
+                    Debug.LogError($"  ventilColumnIndex={ventilColumnIndex}, earTagColumnIndex={earTagColumnIndex}");
                     OnImportError?.Invoke(error);
                     return false;
                 }
+                
+                Debug.Log($"[DataRepository] Spalten-Indizes: Ventil={ventilColumnIndex}, Ohrmarke={earTagColumnIndex}, Belegdatum={matingDateColumnIndex}");
 
                 // Datenzeilen verarbeiten
                 int successCount = 0;
@@ -179,30 +196,38 @@ namespace D8PlanerXR.Data
 
                     try
                     {
-                        string[] values = line.Split(config.delimiter);
+                        string[] values = ParseCSVLine(line, config.delimiter);
                         
-                        if (values.Length < headers.Length)
+                        if (values.Length <= ventilColumnIndex || values.Length <= earTagColumnIndex)
                         {
-                            Debug.LogWarning($"Zeile {i + 1}: Nicht genug Spalten ({values.Length}/{headers.Length})");
+                            Debug.LogWarning($"Zeile {i + 1}: Nicht genug Spalten ({values.Length})");
                             errorCount++;
                             continue;
                         }
 
                         SowData sowData = new SowData();
 
-                        // Ventilnummer parsen
-                        if (!int.TryParse(values[ventilColumnIndex].Trim(), out sowData.ventilNumber))
+                        // Ventilnummer parsen (entferne Anführungszeichen und Leerzeichen)
+                        string ventilStr = CleanValue(values[ventilColumnIndex]);
+                        if (!int.TryParse(ventilStr, out sowData.ventilNumber))
                         {
-                            Debug.LogWarning($"Zeile {i + 1}: Ungültige Ventilnummer: {values[ventilColumnIndex]}");
-                            errorCount++;
-                            continue;
+                            // Versuche nur Zahlen zu extrahieren (using compiled regex for performance)
+                            string numbersOnly = NumbersOnlyRegex.Replace(ventilStr, "");
+                            if (!int.TryParse(numbersOnly, out sowData.ventilNumber))
+                            {
+                                if (i == startLine) // Nur bei der ersten Datenzeile warnen
+                                    Debug.LogWarning($"Zeile {i + 1}: Ungültige Ventilnummer: '{ventilStr}'");
+                                errorCount++;
+                                continue;
+                            }
                         }
 
-                        // Ohrmarkennummer
-                        sowData.earTagNumber = values[earTagColumnIndex].Trim();
+                        // Ohrmarkennummer (entferne Anführungszeichen und Leerzeichen)
+                        sowData.earTagNumber = CleanValue(values[earTagColumnIndex]);
                         if (string.IsNullOrEmpty(sowData.earTagNumber))
                         {
-                            Debug.LogWarning($"Zeile {i + 1}: Leere Ohrmarkennummer");
+                            if (i == startLine) // Nur bei der ersten Datenzeile warnen
+                                Debug.LogWarning($"Zeile {i + 1}: Leere Ohrmarkennummer");
                             errorCount++;
                             continue;
                         }
@@ -210,7 +235,8 @@ namespace D8PlanerXR.Data
                         // Deckdatum parsen (optional)
                         if (matingDateColumnIndex >= 0 && matingDateColumnIndex < values.Length)
                         {
-                            if (DateTime.TryParse(values[matingDateColumnIndex].Trim(), out DateTime matingDate))
+                            string dateStr = CleanValue(values[matingDateColumnIndex]);
+                            if (DateTime.TryParse(dateStr, out DateTime matingDate))
                             {
                                 sowData.matingDate = matingDate;
                                 sowData.daysSinceMating = (DateTime.Now - matingDate).Days;
@@ -220,13 +246,13 @@ namespace D8PlanerXR.Data
                         // Trächtigkeitsstatus (optional)
                         if (pregnancyStatusColumnIndex >= 0 && pregnancyStatusColumnIndex < values.Length)
                         {
-                            sowData.pregnancyStatus = values[pregnancyStatusColumnIndex].Trim();
+                            sowData.pregnancyStatus = CleanValue(values[pregnancyStatusColumnIndex]);
                         }
 
                         // Gesundheitsstatus (optional)
                         if (healthStatusColumnIndex >= 0 && healthStatusColumnIndex < values.Length)
                         {
-                            sowData.healthStatus = values[healthStatusColumnIndex].Trim();
+                            sowData.healthStatus = CleanValue(values[healthStatusColumnIndex]);
                         }
 
                         // Ampelfarbe berechnen (nach allen Daten)
@@ -235,7 +261,7 @@ namespace D8PlanerXR.Data
                         // Alle Spalten als zusätzliche Daten speichern
                         for (int j = 0; j < headers.Length && j < values.Length; j++)
                         {
-                            sowData.additionalData[headers[j].Trim()] = values[j].Trim();
+                            sowData.additionalData[CleanValue(headers[j])] = CleanValue(values[j]);
                         }
 
                         // Daten hinzufügen
@@ -362,10 +388,11 @@ namespace D8PlanerXR.Data
         {
             if (column == null) return -1;
 
-            // Zuerst versuche exakte Namenszuordnung
+            // Zuerst versuche exakte Namenszuordnung (bereinige Anführungszeichen)
             for (int i = 0; i < headers.Length; i++)
             {
-                if (headers[i].Trim().Equals(column.originalName, StringComparison.OrdinalIgnoreCase))
+                string cleanHeader = CleanValue(headers[i]);
+                if (cleanHeader.Equals(column.originalName, StringComparison.OrdinalIgnoreCase))
                 {
                     return i;
                 }
@@ -388,6 +415,79 @@ namespace D8PlanerXR.Data
             }
             
             return -1;
+        }
+
+        /// <summary>
+        /// Ermittelt den Index einer Spalte, mit Fallback auf festen Index
+        /// </summary>
+        private int GetColumnIndexWithFallback(string[] headers, CSVColumnConfig.ColumnDefinition column, int fallbackIndex)
+        {
+            int index = GetColumnIndex(headers, column);
+            if (index >= 0)
+            {
+                return index;
+            }
+            
+            // Fallback auf festen Index (für MusterPlan.csv)
+            if (fallbackIndex >= 0 && fallbackIndex < headers.Length)
+            {
+                Debug.Log($"[DataRepository] Verwende Fallback-Index {fallbackIndex} für Spalte '{column?.originalName}'");
+                return fallbackIndex;
+            }
+            
+            return -1;
+        }
+
+        /// <summary>
+        /// Parst eine CSV-Zeile und berücksichtigt Anführungszeichen
+        /// </summary>
+        private string[] ParseCSVLine(string line, char delimiter)
+        {
+            List<string> result = new List<string>();
+            bool inQuotes = false;
+            StringBuilder currentField = new StringBuilder();
+            
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (c == delimiter && !inQuotes)
+                {
+                    result.Add(currentField.ToString());
+                    currentField.Clear();
+                }
+                else
+                {
+                    currentField.Append(c);
+                }
+            }
+            
+            // Letztes Feld hinzufügen
+            result.Add(currentField.ToString());
+            
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// Bereinigt einen Wert von Anführungszeichen und Leerzeichen
+        /// </summary>
+        private string CleanValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            
+            // Entferne führende/nachfolgende Anführungszeichen und Leerzeichen
+            string cleaned = value.Trim();
+            if (cleaned.StartsWith("\"") && cleaned.EndsWith("\""))
+            {
+                cleaned = cleaned.Substring(1, cleaned.Length - 2);
+            }
+            cleaned = cleaned.Trim();
+            
+            return cleaned;
         }
 
         /// <summary>
