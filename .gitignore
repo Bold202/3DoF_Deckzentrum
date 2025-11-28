@@ -87,10 +87,11 @@ QRCodes/*.png
 QRCodes/*.jpg
 !QRCodes/.gitkeep
 
-# CSV Files (außer Beispiele)
+# CSV Files (außer Beispiele und Import-Ordner)
 *.csv
 !*example*.csv
 !*beispiel*.csv
+!Import/*.csv
 
 # Android
 *.apk
@@ -132,12 +133,15 @@ logs/
 *.temp
 ~*
 
-# Platform-specific
-[Aa]ndroid/
-[Ii]OS/
-[Ww]indows/
-[Mm]ac/
-[Ll]inux/
+# Platform-specific (Unity build output folders at root level)
+/[Aa]ndroid/
+/[Ii]OS/
+/[Ww]indows/
+/[Mm]ac/
+/[Ll]inux/
+
+# Allow Unity Android plugins
+!Assets/Plugins/Android/
 
 # Asset Store Tools
 AssetStoreTools/
