@@ -6,6 +6,69 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [1.2.0] - 2025-11-28
+
+### ✨ Hinzugefügt
+
+#### Mobile-First Kamera-System
+- **MobileCameraController.cs**: Neue vereinfachte Kamera-Implementierung für Smartphones
+  - WebCamTexture statt AR Foundation für zuverlässigere Kamera-Nutzung
+  - Automatische Kamera-Initialisierung beim App-Start
+  - Haptic-Feedback bei erfolgreicher QR-Code-Erkennung
+  - Debug-Informationen für Entwicklung
+  - Automatische Kamera-Rotation für verschiedene Geräte
+  - Front-/Back-Kamera Wechsel möglich
+
+- **MobileSceneManager.cs**: Szenen-Manager für den Handy-Modus
+  - Automatischer CSV-Import beim Start
+  - MusterPlan.csv Format Unterstützung
+  - Menü-System Integration
+  - Info-Panel für Statusmeldungen
+
+- **MobileSceneCreator.cs (Editor)**: Unity Editor Tool
+  - Erstellt fertige Handy-Szene über Menü
+  - UI-Layout mit Kamera-Anzeige, Overlay, Status-Panel
+  - Alle UI-Komponenten vorkonfiguriert
+
+#### MusterPlan.csv Support
+- Vollständige Unterstützung für DB Sauenplaner Export Format
+- Automatische Spalten-Zuordnung (Ohrmarke=Index 1, Ventil=Index 3, Datum=Index 4)
+- Korrektes Parsing von Anführungszeichen in CSV
+- Fallback auf Index-basierte Zuordnung für dynamische Header
+
+### 🔧 Geändert
+
+#### DeviceModeManager
+- Neues Flag `forceMobileMode` für prioritisierte Mobile-Entwicklung
+- Standard-Modus jetzt MobileMode für Smartphones ohne VR
+
+#### DataRepository
+- **ParseCSVLine()**: Neue Methode für korrektes CSV-Parsing mit Anführungszeichen
+- **CleanValue()**: Bereinigt Werte von Anführungszeichen und Leerzeichen
+- **GetColumnIndexWithFallback()**: Fallback auf feste Indizes für bekannte Formate
+- Verbesserte Debug-Ausgaben für CSV-Import
+
+#### CSVColumnConfig
+- **CreateMusterPlanConfig()**: Überarbeitete Konfiguration für MusterPlan.csv
+  - Korrekte Index-basierte Spalten-Zuordnung
+  - Ausführliche Dokumentation im Code
+
+#### CSVConfigManager
+- **SetConfig()**: Neue Methode zum direkten Setzen der Konfiguration
+- Automatisches Laden der MusterPlan-Konfiguration wenn keine vorhanden
+
+### 📖 Dokumentation
+- README.md aktualisiert mit Mobile-First Ansatz
+- Neue Ampel-Schwellwerte dokumentiert
+- Projektstruktur mit Mobile-Ordner aktualisiert
+
+### 🐛 Fehlerbehebungen
+- CSV-Import ignoriert nicht mehr Zeilen mit Anführungszeichen
+- Ventilnummern werden korrekt aus MusterPlan.csv extrahiert
+- Kamera-Rotation auf verschiedenen Android-Geräten
+
+---
+
 ## [1.1.0] - 2025-11-26
 
 ### ✨ Hinzugefügt
