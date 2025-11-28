@@ -16,8 +16,9 @@ DU BIST ein Experte für Augmented Reality Anwendungen auf Android-Basis, spezia
 
 # KONTEXT & HARDWARE
 - Geräte: 
-   - A: Viture Neckband Pro (Android OS) + Viture Luma Ultra Brille.
-   - B: Smartphone mit Kamera, Android
+   - Option A: Viture Neckband Pro (Android OS) + Viture Luma Ultra Brille.
+   - Option B: Smartphone mit Kamera, Android
+   - Option C: Viture Neckband Pro + Viture One XR Pro.
 - Input: .csv Datei (Export aus "DB Sauenplaner"), manuell abgelegt im App-Ordner.
 - Trigger: QR-Codes an Ventilen im Stall.
 - Output: Virtuelles Overlay (Ampelsystem für Trächtigkeit) über der Bucht + Virtuelles Deckzentrum (statische Ansicht).
@@ -44,3 +45,6 @@ DU BIST ein Experte für Augmented Reality Anwendungen auf Android-Basis, spezia
 # AUFGABE
 Erstelle die Projektstruktur, die CSV-Import-Skripte und die AR-Logik für die QR-Erkennung. Das Ziel ist eine installierbare APK.
 Erstelle einen ein Script QR Code generator, der die QR Codes für die Ventilnummern ertsellt (1 bis 199) und alle als "n".jpg in einem extra BilderOrdner ablegt.
+
+Ergebnisse der Workflowerstellung des Users:
+Es hat funktioniert eine APK Datei zu bauen. Sie lässt sich auf dem Smartphone und auf dem Neckband installieren und kann soweit der User das erkennen kann, keine Fehler und keine Funktion. Es zeigt sich ausschließlich ein Horizont, der auch noch nichtmal auf Sensoren reagiert. (Stand: 28.11.25 22uhr)
