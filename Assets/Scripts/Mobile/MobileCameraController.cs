@@ -186,7 +186,39 @@ namespace D8PlanerXR.Mobile
         {
             UpdateStatusText("Kamera wird initialisiert...");
             
-            // Request camera permission
+            // Request camera permission - use AndroidPermissionHandler on Android
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Use Android permission system
+            var permissionHandler = Core.AndroidPermissionHandler.Instance;
+            if (permissionHandler != null && !permissionHandler.HasCameraPermission)
+            {
+                UpdateStatusText("Kamera-Berechtigung wird angefordert...");
+                
+                bool permissionGranted = false;
+                bool waitingForPermission = true;
+                
+                permissionHandler.RequestCameraPermission(result => {
+                    permissionGranted = result;
+                    waitingForPermission = false;
+                });
+                
+                // Wait for permission result
+                float timeout = 30f;
+                while (waitingForPermission && timeout > 0)
+                {
+                    yield return new WaitForSeconds(0.1f);
+                    timeout -= 0.1f;
+                }
+                
+                if (!permissionGranted)
+                {
+                    Debug.LogError("[MobileCameraController] Camera permission denied!");
+                    UpdateStatusText("Kamera-Berechtigung verweigert! Bitte in Einstellungen aktivieren.");
+                    yield break;
+                }
+            }
+#else
+            // Use Unity's WebCam authorization for Editor/other platforms
             if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
             {
                 yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
@@ -198,6 +230,7 @@ namespace D8PlanerXR.Mobile
                 UpdateStatusText("Kamera-Berechtigung verweigert!");
                 yield break;
             }
+#endif
             
             // Get available cameras
             devices = WebCamTexture.devices;
