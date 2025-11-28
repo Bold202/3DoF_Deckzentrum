@@ -124,19 +124,25 @@ namespace D8PlanerXR.Core
                 if (showRationaleDialog && ShouldShowRationale(Permission.Camera))
                 {
                     ShowPermissionRationale("Kamera", "Die App benötigt Zugriff auf die Kamera, um QR-Codes zu scannen.");
-                    yield return new WaitUntil(() => !permissionDialogPanel.activeSelf);
+                    yield return new WaitUntil(() => permissionDialogPanel == null || !permissionDialogPanel.activeSelf);
                 }
                 
+                bool cameraCallbackReceived = false;
+                
                 var callbacks = new PermissionCallbacks();
-                callbacks.PermissionGranted += OnCameraPermissionGranted;
-                callbacks.PermissionDenied += OnCameraPermissionDenied;
-                callbacks.PermissionDeniedAndDontAskAgain += OnCameraPermissionDeniedDontAsk;
+                callbacks.PermissionGranted += (p) => { OnCameraPermissionGranted(p); cameraCallbackReceived = true; };
+                callbacks.PermissionDenied += (p) => { OnCameraPermissionDenied(p); cameraCallbackReceived = true; };
+                callbacks.PermissionDeniedAndDontAskAgain += (p) => { OnCameraPermissionDeniedDontAsk(p); cameraCallbackReceived = true; };
                 
                 Permission.RequestUserPermission(Permission.Camera, callbacks);
                 
-                // Wait for permission result
-                yield return new WaitForSeconds(0.5f);
-                yield return new WaitUntil(() => Permission.HasUserAuthorizedPermission(Permission.Camera) || !isCheckingPermissions);
+                // Wait for callback with timeout (max 30 seconds)
+                float timeout = 30f;
+                while (!cameraCallbackReceived && timeout > 0)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    timeout -= 0.5f;
+                }
             }
             
             HasCameraPermission = Permission.HasUserAuthorizedPermission(Permission.Camera);
@@ -149,18 +155,25 @@ namespace D8PlanerXR.Core
                 if (showRationaleDialog && ShouldShowRationale(Permission.ExternalStorageRead))
                 {
                     ShowPermissionRationale("Speicher", "Die App benötigt Zugriff auf den Speicher, um CSV-Dateien zu lesen.");
-                    yield return new WaitUntil(() => !permissionDialogPanel.activeSelf);
+                    yield return new WaitUntil(() => permissionDialogPanel == null || !permissionDialogPanel.activeSelf);
                 }
                 
+                bool storageCallbackReceived = false;
+                
                 var callbacks = new PermissionCallbacks();
-                callbacks.PermissionGranted += OnStoragePermissionGranted;
-                callbacks.PermissionDenied += OnStoragePermissionDenied;
-                callbacks.PermissionDeniedAndDontAskAgain += OnStoragePermissionDeniedDontAsk;
+                callbacks.PermissionGranted += (p) => { OnStoragePermissionGranted(p); storageCallbackReceived = true; };
+                callbacks.PermissionDenied += (p) => { OnStoragePermissionDenied(p); storageCallbackReceived = true; };
+                callbacks.PermissionDeniedAndDontAskAgain += (p) => { OnStoragePermissionDeniedDontAsk(p); storageCallbackReceived = true; };
                 
                 Permission.RequestUserPermission(Permission.ExternalStorageRead, callbacks);
                 
-                // Wait for permission result
-                yield return new WaitForSeconds(0.5f);
+                // Wait for callback with timeout (max 30 seconds)
+                float timeout = 30f;
+                while (!storageCallbackReceived && timeout > 0)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    timeout -= 0.5f;
+                }
             }
             
             HasStoragePermission = Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead);

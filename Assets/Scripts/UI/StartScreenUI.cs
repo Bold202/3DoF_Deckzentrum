@@ -157,11 +157,11 @@ namespace D8PlanerXR.UI
             
             if (isVRDevice)
             {
-                modeButtonText.text = "🕶️ VR-Modus starten";
+                modeButtonText.text = "[VR] Modus starten";
             }
             else
             {
-                modeButtonText.text = "📱 Kamera-Modus starten";
+                modeButtonText.text = "[CAM] Kamera-Modus starten";
             }
         }
         
@@ -324,7 +324,8 @@ namespace D8PlanerXR.UI
                 }
             }
             
-            // Also check the Import folder in the app
+#if UNITY_EDITOR
+            // Only check Import folder in editor mode where Application.dataPath is valid
             string importPath = Path.Combine(Application.dataPath, "..", "Import");
             if (Directory.Exists(importPath))
             {
@@ -341,6 +342,7 @@ namespace D8PlanerXR.UI
                     Debug.LogWarning($"[StartScreenUI] Error searching Import folder: {e.Message}");
                 }
             }
+#endif
         }
         
         /// <summary>
@@ -350,8 +352,14 @@ namespace D8PlanerXR.UI
         {
             var paths = new System.Collections.Generic.List<string>();
             
-            // Add persistent data path
+            // Add persistent data path (always available)
             paths.Add(Application.persistentDataPath);
+            
+            // Add streaming assets path
+            if (!string.IsNullOrEmpty(Application.streamingAssetsPath))
+            {
+                paths.Add(Application.streamingAssetsPath);
+            }
             
 #if UNITY_ANDROID && !UNITY_EDITOR
             // Add Android external storage paths
@@ -382,11 +390,15 @@ namespace D8PlanerXR.UI
             {
                 Debug.LogWarning($"[StartScreenUI] Could not get external files dir: {e.Message}");
             }
-#else
+#elif UNITY_EDITOR
             // Add common paths for editor/desktop
-            paths.Add(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
-            paths.Add(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-            paths.Add(Path.Combine(Application.dataPath, "..", "Import"));
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            
+            if (!string.IsNullOrEmpty(desktop))
+                paths.Add(desktop);
+            if (!string.IsNullOrEmpty(documents))
+                paths.Add(documents);
 #endif
             
             return paths.ToArray();

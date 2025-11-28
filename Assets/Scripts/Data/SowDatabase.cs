@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace D8PlanerXR.Data
@@ -31,6 +32,9 @@ namespace D8PlanerXR.Data
         private const string DB_FILE_NAME = "sow_database.json";
         private const string IMPORT_HISTORY_KEY = "csv_import_history";
         private const int RETENTION_MONTHS = 6;
+
+        // Compiled regex for performance (extract digits only)
+        private static readonly Regex NumbersOnlyRegex = new Regex(@"[^\d]", RegexOptions.Compiled);
 
         // Internal data structure for serialization
         [Serializable]
@@ -273,7 +277,7 @@ namespace D8PlanerXR.Data
                         string ventilStr = CleanValue(values[ventilColumnIndex]);
                         if (!int.TryParse(ventilStr, out entry.ventilNumber))
                         {
-                            string numbersOnly = System.Text.RegularExpressions.Regex.Replace(ventilStr, @"[^\d]", "");
+                            string numbersOnly = NumbersOnlyRegex.Replace(ventilStr, "");
                             if (!int.TryParse(numbersOnly, out entry.ventilNumber))
                             {
                                 skippedRecords++;
@@ -481,16 +485,19 @@ namespace D8PlanerXR.Data
         /// <summary>
         /// Add sow data to the DataRepository
         /// </summary>
-        private void AddSowDataToRepository(SowData sowData)
+        /// <returns>True if successful, false otherwise</returns>
+        private bool AddSowDataToRepository(SowData sowData)
         {
             // Use DataRepository's public method to add sow data
             try
             {
                 DataRepository.Instance.AddSowDataPublic(sowData);
+                return true;
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[SowDatabase] Error adding sow to repository: {e.Message}");
+                Debug.LogError($"[SowDatabase] Error adding sow to repository: {e.Message}");
+                return false;
             }
         }
 

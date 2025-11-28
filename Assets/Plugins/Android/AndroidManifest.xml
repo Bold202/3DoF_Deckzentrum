@@ -9,13 +9,14 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <!-- Storage permissions for reading CSV files -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- For Android 12 and below, we need READ_EXTERNAL_STORAGE -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
         android:maxSdkVersion="28" />
     
-    <!-- For Android 10+ (API 29+) scoped storage -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        android:minSdkVersion="30" />
+    <!-- Note: For Android 13+ (API 33+), apps should use scoped storage -->
+    <!-- CSV files should be placed in app-specific directories or selected via file picker -->
 
     <!-- Vibration for haptic feedback on QR scan -->
     <uses-permission android:name="android.permission.VIBRATE" />
