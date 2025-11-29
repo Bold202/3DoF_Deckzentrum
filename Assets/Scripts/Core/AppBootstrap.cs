@@ -319,7 +319,8 @@ namespace D8PlanerXR.Core
                 }
                 else
                 {
-                    LogDebug("  Some permissions were denied");
+                    LogDebug("  Camera permission was denied. QR-code scanning will not work.");
+                    LogDebug("  Please enable camera permission in Android Settings > Apps > D8-Planer XR > Permissions");
                 }
             });
             
