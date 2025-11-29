@@ -30,6 +30,9 @@ namespace D8PlanerXR.Mobile
         [SerializeField] private bool autoLoadDefaultCSV = true;
         [SerializeField] private string defaultCSVFileName = "MusterPlan.csv";
         
+        [Header("Mode Switching")]
+        [SerializeField] private Button modeSwitchButton;
+        
         private static MobileSceneManager instance;
         public static MobileSceneManager Instance => instance;
         
@@ -49,9 +52,20 @@ namespace D8PlanerXR.Mobile
         {
             InitializeScene();
             
-            // Try to sync from database first, then load default CSV if needed
-            if (Data.SowDatabase.Instance != null && Data.SowDatabase.Instance.TotalRecords > 0)
+            // Check if AppBootstrap handled data loading
+            if (Core.AppBootstrap.Instance != null && Core.AppBootstrap.Instance.IsInitialized)
             {
+                // Data was loaded by bootstrap
+                var dataRepo = Data.DataRepository.Instance;
+                int sowCount = dataRepo != null ? dataRepo.TotalSows : 0;
+                if (sowCount > 0)
+                {
+                    ShowInfo($"Daten geladen: {sowCount} Datensätze");
+                }
+            }
+            else if (Data.SowDatabase.Instance != null && Data.SowDatabase.Instance.TotalRecords > 0)
+            {
+                // Try to sync from database first
                 Data.SowDatabase.Instance.SyncToDataRepository();
                 ShowInfo($"Datenbank geladen: {Data.SowDatabase.Instance.TotalRecords} Datensätze");
             }
@@ -73,6 +87,12 @@ namespace D8PlanerXR.Mobile
             if (Data.SowDatabase.Instance != null)
             {
                 Data.SowDatabase.Instance.OnDatabaseUpdated += OnDatabaseUpdated;
+            }
+            
+            // Setup mode switch button
+            if (modeSwitchButton != null)
+            {
+                modeSwitchButton.onClick.AddListener(OnModeSwitchClicked);
             }
         }
         
@@ -254,6 +274,35 @@ namespace D8PlanerXR.Mobile
         {
             Debug.Log("[MobileSceneManager] Settings clicked");
             ShowInfo("Einstellungen: Demnächst verfügbar");
+            ToggleMenu();
+        }
+        
+        /// <summary>
+        /// Handle mode switch button click
+        /// </summary>
+        private void OnModeSwitchClicked()
+        {
+            Debug.Log("[MobileSceneManager] Mode switch clicked");
+            
+            if (Core.RuntimeModeController.Instance != null)
+            {
+                Core.RuntimeModeController.Instance.ToggleMode();
+            }
+            else if (Core.DeviceModeManager.Instance != null)
+            {
+                // Fallback if RuntimeModeController not available
+                if (Core.DeviceModeManager.Instance.IsMobileMode)
+                {
+                    Core.DeviceModeManager.Instance.SwitchMode(Core.DeviceModeManager.DeviceMode.VRMode);
+                    ShowInfo("VR-Modus aktiviert");
+                }
+                else
+                {
+                    Core.DeviceModeManager.Instance.SwitchMode(Core.DeviceModeManager.DeviceMode.MobileMode);
+                    ShowInfo("Handy-Modus aktiviert");
+                }
+            }
+            
             ToggleMenu();
         }
         

@@ -92,10 +92,17 @@ namespace D8PlanerXR.Mobile
         {
             InitializeBarcodeReader();
             
-            // Auto-start camera if in mobile mode
-            if (DeviceModeManager.Instance != null && DeviceModeManager.Instance.IsMobileMode)
+            // Auto-start camera - always start in mobile mode or if no mode manager
+            bool shouldAutoStart = DeviceModeManager.Instance == null || DeviceModeManager.Instance.IsMobileMode;
+            
+            if (shouldAutoStart)
             {
+                Debug.Log("[MobileCameraController] Auto-starting camera (mobile mode)");
                 StartCoroutine(AutoStartCamera());
+            }
+            else
+            {
+                Debug.Log("[MobileCameraController] Skipping auto-start (not in mobile mode)");
             }
             
             // Hide info panel initially
@@ -105,6 +112,12 @@ namespace D8PlanerXR.Mobile
             }
             
             UpdateStatusText("Bereit zum Scannen...");
+            
+            // Subscribe to mode changes
+            if (DeviceModeManager.Instance != null)
+            {
+                DeviceModeManager.Instance.OnModeChanged += OnModeChanged;
+            }
         }
         
         private IEnumerator AutoStartCamera()
@@ -117,6 +130,29 @@ namespace D8PlanerXR.Mobile
         private void OnDestroy()
         {
             StopCamera();
+            
+            // Unsubscribe from mode changes
+            if (DeviceModeManager.Instance != null)
+            {
+                DeviceModeManager.Instance.OnModeChanged -= OnModeChanged;
+            }
+        }
+        
+        /// <summary>
+        /// Handle mode changes - start/stop camera accordingly
+        /// </summary>
+        private void OnModeChanged(DeviceModeManager.DeviceMode newMode)
+        {
+            if (newMode == DeviceModeManager.DeviceMode.MobileMode)
+            {
+                Debug.Log("[MobileCameraController] Mode changed to Mobile - starting camera");
+                StartCamera();
+            }
+            else
+            {
+                Debug.Log("[MobileCameraController] Mode changed to VR - stopping camera");
+                StopCamera();
+            }
         }
         
         private void OnApplicationPause(bool pauseStatus)
@@ -189,7 +225,21 @@ namespace D8PlanerXR.Mobile
             // Request camera permission - use AndroidPermissionHandler on Android
 #if UNITY_ANDROID && !UNITY_EDITOR
             // Use Android permission system
-            var permissionHandler = Core.AndroidPermissionHandler.Instance;
+            Core.AndroidPermissionHandler permissionHandler = Core.AndroidPermissionHandler.Instance;
+            
+            // If no permission handler exists, create one
+            if (permissionHandler == null)
+            {
+                Debug.Log("[MobileCameraController] Creating AndroidPermissionHandler...");
+                GameObject phObj = new GameObject("AndroidPermissionHandler");
+                DontDestroyOnLoad(phObj);
+                permissionHandler = phObj.AddComponent<Core.AndroidPermissionHandler>();
+                
+                // Wait for initialization
+                yield return new WaitForSeconds(0.1f);
+            }
+            
+            // Check and request permission if needed
             if (permissionHandler != null && !permissionHandler.HasCameraPermission)
             {
                 UpdateStatusText("Kamera-Berechtigung wird angefordert...");
@@ -216,6 +266,11 @@ namespace D8PlanerXR.Mobile
                     UpdateStatusText("Kamera-Berechtigung verweigert! Bitte in Einstellungen aktivieren.");
                     yield break;
                 }
+            }
+            else if (permissionHandler == null)
+            {
+                // Fallback: Try Unity's permission system
+                Debug.LogWarning("[MobileCameraController] AndroidPermissionHandler not available, using fallback");
             }
 #else
             // Use Unity's WebCam authorization for Editor/other platforms
@@ -545,8 +600,13 @@ namespace D8PlanerXR.Mobile
             
             if (sows.Count > 0)
             {
-                // Build info text
+                // Build info text as a table
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                
+                // Header line - using ASCII-compatible characters for better device support
+                sb.AppendLine("--------------------------------");
+                sb.AppendLine("Status | Ohrmarke  | Tage | Datum");
+                sb.AppendLine("--------------------------------");
                 
                 // Determine dominant traffic light color
                 SowData.TrafficLightColor dominantColor = GetDominantTrafficLight(sows);
@@ -555,8 +615,35 @@ namespace D8PlanerXR.Mobile
                 foreach (var sow in sows)
                 {
                     string colorIndicator = GetColorIndicator(sow.trafficLight);
-                    sb.AppendLine($"{colorIndicator} {sow.earTagNumber} - {sow.daysSinceMating} Tage");
+                    string earTag = sow.earTagNumber.PadRight(9);
+                    string days = sow.daysSinceMating.ToString().PadLeft(4);
+                    string dateStr = sow.matingDate != System.DateTime.MinValue 
+                        ? sow.matingDate.ToString("dd.MM") 
+                        : "  --  ";
+                    
+                    sb.AppendLine($"{colorIndicator}    | {earTag} | {days} | {dateStr}");
                 }
+                
+                sb.AppendLine("--------------------------------");
+                
+                // Add summary
+                int greenCount = 0, yellowCount = 0, redCount = 0, purpleCount = 0;
+                foreach (var sow in sows)
+                {
+                    switch (sow.trafficLight)
+                    {
+                        case SowData.TrafficLightColor.Green: greenCount++; break;
+                        case SowData.TrafficLightColor.Yellow: yellowCount++; break;
+                        case SowData.TrafficLightColor.Red: redCount++; break;
+                        case SowData.TrafficLightColor.Purple: purpleCount++; break;
+                    }
+                }
+                
+                sb.AppendLine($"Gesamt: {sows.Count} Sauen");
+                if (purpleCount > 0) sb.AppendLine($"  🟣 Medikation: {purpleCount}");
+                if (redCount > 0) sb.AppendLine($"  🔴 Kurz vor Abferkelung: {redCount}");
+                if (yellowCount > 0) sb.AppendLine($"  🟡 Mittelfristig: {yellowCount}");
+                if (greenCount > 0) sb.AppendLine($"  🟢 Normal: {greenCount}");
                 
                 if (sowInfoText != null)
                 {
@@ -569,7 +656,11 @@ namespace D8PlanerXR.Mobile
             {
                 if (sowInfoText != null)
                 {
-                    sowInfoText.text = "Keine Sauen zugeordnet";
+                    sowInfoText.text = "--------------------------------\n" +
+                                      "Keine Sauen zugeordnet\n" +
+                                      "--------------------------------\n\n" +
+                                      "Hinweis: Pruefen Sie, ob die\n" +
+                                      "CSV-Datei geladen wurde.";
                 }
                 
                 UpdateTrafficLightDisplay(SowData.TrafficLightColor.Unknown);

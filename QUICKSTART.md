@@ -1,29 +1,111 @@
 # D8-Planer XR - Schnellstart-Anleitung
 
-## Priorität #1: XR Vision im Deckzentrum
+## 📱 Handy-Modus FIRST! (Empfohlen zum Testen)
 
-Diese Anleitung führt Sie durch den schnellsten Weg, um die App zum Laufen zu bringen.
+Die App startet automatisch im Handy-Modus. Dieser Modus funktioniert auf jedem Android-Smartphone und ist der schnellste Weg zum Testen.
+
+---
+
+## 🚀 Schnellstart Handy-Modus (3 Schritte)
+
+### Schritt 1: APK installieren
+```bash
+adb install D8PlanerXR.apk
+```
+
+### Schritt 2: CSV-Datei kopieren
+Kopieren Sie die `MusterPlan.csv` in:
+```
+/Android/data/com.d8planerxr.app/files/MusterPlan.csv
+```
+
+### Schritt 3: App starten & QR-Code scannen
+1. App öffnen (startet automatisch im Handy-Modus)
+2. Kamera wird aktiviert
+3. QR-Code auf Ventil scannen
+4. Sau-Daten werden als Tabelle angezeigt
+
+**Das war's! 🎉**
+
+---
+
+## 📊 Ampel-Bedeutung
+
+| Farbe | Bedeutung | Tage seit Deckung |
+|-------|-----------|-------------------|
+| 🟢 Grün | Normal, tragend | 0-79 Tage |
+| 🟡 Gelb | Mittelfristig | 80-106 Tage |
+| 🔴 Rot | Kurz vor Abferkelung | 107+ Tage |
+| 🟣 Lila | **Medikation erforderlich!** | (Priorität) |
+
+---
+
+## 🔧 Handy-Modus Bedienung
+
+### QR-Code scannen
+1. Kamera auf QR-Code richten (Abstand 20-50cm)
+2. Grüner Rahmen zeigt Scan-Bereich
+3. Bei Erkennung: Vibration + Overlay erscheint
+
+### Anzeige verstehen
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Ventil 165
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status  │ Ohrmarke │ Tage │ Datum
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🟣      │ 602      │  134 │ 13.07
+🔴      │ 450      │  133 │ 14.07
+🟡      │ 646      │   85 │ 14.07
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Gesamt: 3 Sauen
+  🟣 Medikation: 1
+  🔴 Kurz vor Abferkelung: 1
+  🟡 Mittelfristig: 1
+```
+
+### Menü öffnen
+- Tippen auf ☰ (oben rechts)
+- CSV neu laden
+- Modus wechseln (VR ↔ Handy)
+
+---
+
+## 🕶️ VR-Modus (Viture Neckband)
+
+### Wechsel zu VR-Modus
+1. Menü öffnen (☰)
+2. "Einstellungen" → "VR-Modus aktivieren"
+3. Oder: Automatische Erkennung bei Viture-Hardware
+
+### VR-Modus Features
+- Mehrere QR-Codes gleichzeitig
+- Spatial Anchoring (Overlays bleiben am Ventil)
+- Virtuelles Deckzentrum (3D-Übersicht)
 
 ---
 
 ## 📋 Voraussetzungen
 
-### Hardware
+### Hardware (Handy-Modus)
+- ✅ Android Smartphone (Android 10+)
+- ✅ Kamera
+
+### Hardware (VR-Modus)
 - ✅ Viture Neckband Pro (Android 12/13)
 - ✅ Viture Luma Ultra Brille
 - ✅ Powerbank für dauerhaften Betrieb
-- ✅ Katasymbol T50M Pro Bluetooth Label Printer (optional für QR-Code Druck)
 
-### Software
+### Software (für Entwicklung)
 - Unity 2022 LTS oder neuer
 - Android SDK
 - Python 3.7+ (für QR-Code Generierung)
 
 ---
 
-## 🚀 Schnellstart (5 Schritte)
+## 🔨 Entwickler-Schnellstart (Unity Setup)
 
-### Schritt 1: QR-Codes generieren
+### QR-Codes generieren
 
 ```bash
 cd Tools
@@ -35,31 +117,44 @@ python3 qr_generator_batch.py
 
 ---
 
-### Schritt 2: Mock-Daten erstellen
+### MusterPlan.csv Format (DB Sauenplaner Export)
 
-**Option A: In Unity (empfohlen)**
-1. Öffne Unity Projekt
-2. Erstelle leeres GameObject: "DataGenerator"
-3. Füge Component hinzu: `MockDataGenerator`
-4. Right-Click → Context Menu → "Mock-Daten generieren"
-5. Prüfe: `Application.persistentDataPath` Ordner
-
-**Option B: Manuell**
-Erstelle Datei `ImportDZ.csv` mit diesem Inhalt:
+Die App unterstützt das native Export-Format des DB Sauenplaners:
 
 ```csv
-Sauennummer;Ventilnummer;Deckdatum;Trächtigkeitsstatus;Gesundheitsstatus;Bemerkungen
-DE1234567890;1;26.08.2024;tragend;;Test Sau 1
-DE1234567891;1;15.09.2024;tragend;;Test Sau 2
-DE1234567892;2;01.10.2024;tragend;Medikation;Behandlung erforderlich
-DE1234567893;3;10.11.2024;unbestätigt;;Frisch gedeckt
+"Stichtag";"Abf.";"Wochen bis";"Sau-Nr.";"[Datum]";"TK";"Bucht";"Bel.Datum";"TRT";"Gruppe";"Eber";"Wurf";"Umr.";"vorauss.";"Abferkelung"
+" -3";"     602";"+";"165   ";"13.07.2025";" 134";"202529";"    M 88";"11";"  ";" ";"";"05.11.2025";"29.6"
 ```
 
-Speichere in: `<Android Device>/Android/data/com.d8planerxr.app/files/ImportDZ.csv`
+**Wichtige Spalten:**
+- Spalte 2 (Abf.) = Ohrmarke
+- Spalte 4 (Sau-Nr.) = Ventil/Bucht für QR-Code Zuordnung
+- Spalte 5 = Belegdatum
+- Spalte 6 (TK) = Tage trächtig
 
 ---
 
-### Schritt 3: Unity Szene einrichten
+### Handy-Szene erstellen (Unity)
+
+**Empfohlen:** Nutze den Editor-Helfer:
+1. Menü: **D8-Planer → Handy-Szene erstellen**
+2. Fertig! Szene wird automatisch erstellt mit:
+   - Kamera-Anzeige
+   - QR-Scanner
+   - UI-Overlays
+   - Menü-System
+
+**Alternativ manuell:**
+1. File → New Scene → "MobileScene"
+2. Füge hinzu:
+   - Main Camera
+   - Canvas mit RawImage (für Kamerabild)
+   - MobileCameraController
+   - AppBootstrap (Core/AppBootstrap.cs)
+
+---
+
+### Unity Szene für VR einrichten
 
 **3.1 Neue Szene erstellen**
 - File → New Scene → "MainARScene"
@@ -76,8 +171,8 @@ Speichere in: `<Android Device>/Android/data/com.d8planerxr.app/files/ImportDZ.c
 2. Add Component → `AppController.cs`
 3. Inspector:
    - Initialize On Start: ✓
-   - Default CSV Path: "ImportDZ.csv"
-   - App Version: "1.0.0"
+   - Default CSV Path: "MusterPlan.csv"
+   - App Version: "1.2.0"
 
 **3.4 QR-Code Tracker einrichten**
 1. GameObject → Create Empty → "QRCodeTracker"
@@ -164,56 +259,68 @@ adb install D8PlanerXR_v1.0.apk
 
 ## ✅ Test-Checkliste
 
+### Handy-Modus Test
+- [ ] App startet im Handy-Modus (Kamera automatisch aktiv)
+- [ ] CSV-Daten werden geladen (oder Mock-Daten generiert)
+- [ ] QR-Code wird erkannt (Vibration + Overlay)
+- [ ] Sau-Daten werden als Tabelle angezeigt
+- [ ] Ampelfarben sind korrekt (Grün/Gelb/Rot/Lila)
+- [ ] Menü öffnet sich mit ☰ Button
+
+### VR-Modus Test
+- [ ] Moduswechsel funktioniert (Menü → VR-Modus)
+- [ ] Mehrere QR-Codes gleichzeitig erkennbar
+- [ ] Overlays bleiben am Ventil (Spatial Anchoring)
+- [ ] Virtuelles Deckzentrum funktioniert
+
 ### Editor-Test (ohne Hardware)
-- [ ] AppController initialisiert ohne Fehler
+- [ ] AppBootstrap initialisiert ohne Fehler
 - [ ] Mock-Daten werden generiert
 - [ ] CSV-Import funktioniert
 - [ ] Ampel-Farben werden korrekt berechnet
-- [ ] QR-Code Simulation zeigt Overlay
-
-### Build-Test (Android)
-- [ ] App startet ohne Crash
-- [ ] CSV-Datei wird gefunden und geladen
-- [ ] AR-Kamera aktiviert sich
-- [ ] Logging zeigt System-Info
-
-### Hardware-Test (Viture)
-- [ ] App läuft auf Viture Neckband
-- [ ] QR-Codes werden erkannt (teste mit gedruckten Codes)
-- [ ] Overlays erscheinen am richtigen Ort
-- [ ] Mehrere QR-Codes gleichzeitig erkennbar
-- [ ] Virtuelles Deckzentrum funktioniert
+- [ ] Unit Tests bestehen (Tests/EditMode)
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Problem: "CSV nicht gefunden"
+### Problem: "Kamera startet nicht"
 **Lösung:**
-```csharp
-Debug.Log(Application.persistentDataPath);
-```
-Kopiere CSV in diesen Ordner.
+1. Prüfe Kamera-Berechtigung in Android-Einstellungen
+2. Starte App neu
+3. Bei erster Installation: Berechtigung manuell erteilen
+
+### Problem: "Keine Daten bei QR-Scan"
+**Lösung:**
+1. Prüfe ob CSV geladen wurde (Menü → Info)
+2. CSV-Datei in persistentDataPath kopieren:
+   ```
+   /Android/data/com.d8planerxr.app/files/MusterPlan.csv
+   ```
+3. App neu starten
 
 ### Problem: "QR-Codes werden nicht erkannt"
 **Lösung:**
-1. Prüfe Kamera-Permission
-2. Teste mit gedruckten QR-Codes (nicht Bildschirm)
-3. Aktiviere Debug-Logs im QRCodeTracker
-4. Prüfe Beleuchtung
+1. Abstand zum QR-Code: 20-50cm
+2. QR-Code frontal scannen (nicht schräg)
+3. Gute Beleuchtung wichtig
+4. Gedruckte QR-Codes funktionieren besser als Bildschirm
 
-### Problem: "Overlays erscheinen nicht"
+### Problem: "Falsche Ampelfarben"
 **Lösung:**
-1. Prüfe Prefab-Zuweisung
-2. Prüfe AR Camera Manager
-3. Aktiviere "Simulate QR Codes in Editor"
+1. Prüfe Belegdatum in CSV
+2. Ampel basiert auf Tagen seit Deckung:
+   - Grün: 0-79 Tage
+   - Gelb: 80-106 Tage
+   - Rot: 107+ Tage
+   - Lila: Medikation (Priorität!)
 
 ### Problem: "Build-Fehler"
 **Lösung:**
-1. Prüfe Unity Version (2022 LTS empfohlen)
-2. Prüfe Android SDK Installation
-3. Prüfe ARCore Plugin aktiviert
-4. Clean Build (Delete Library folder)
+1. Unity Version: 2022 LTS empfohlen
+2. Android SDK korrekt installieren
+3. Scripting Backend: IL2CPP
+4. Clean Build: Library-Ordner löschen
 
 ---
 
