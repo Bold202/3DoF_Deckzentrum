@@ -1,0 +1,164 @@
+# ============================================================
+# D8-Planer XR - Automatischer APK Build Workflow
+# ============================================================
+#
+# Dieser Workflow baut automatisch eine Android APK bei:
+#   - Push auf main/master Branch
+#   - Pull Requests auf main/master
+#   - Manueller Auslösung (workflow_dispatch)
+#
+# Die APK wird als Artifact gespeichert und kann direkt
+# heruntergeladen werden.
+#
+# ============================================================
+
+name: Build Android APK
+
+on:
+  push:
+    branches: 
+      - main
+      - master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'Tools/**'
+      - '.gitignore'
+  pull_request:
+    branches: 
+      - main
+      - master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'Tools/**'
+      - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build Type'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Debug
+
+# Verhindert mehrere gleichzeitige Builds für denselben Branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UNITY_VERSION: 2022.3.10f1
+
+jobs:
+  build:
+    name: Build APK (${{ github.event.inputs.build_type || 'Release' }})
+    runs-on: ubuntu-latest
+    
+    steps:
+      # ============================================================
+      # 1. Repository auschecken
+      # ============================================================
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      # ============================================================
+      # 2. Cache für Unity Library (beschleunigt Builds)
+      # ============================================================
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      # ============================================================
+      # 3. Unity Builder Action - Android APK bauen
+      # ============================================================
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          unityVersion: ${{ env.UNITY_VERSION }}
+          buildName: D8-Planer-XR
+          buildsPath: build
+          androidExportType: androidPackage
+          # Keystore ist optional - wenn nicht konfiguriert, wird Debug-Signatur verwendet
+          androidKeystoreName: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && 'user.keystore' || '' }}
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+          # Für Debug-Builds
+          developmentBuild: ${{ github.event.inputs.build_type == 'Debug' }}
+          allowDirtyBuild: true
+
+      # ============================================================
+      # 4. APK als Artifact hochladen
+      # ============================================================
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: D8-Planer-XR-APK-${{ github.run_number }}
+          path: |
+            build/Android/*.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      # ============================================================
+      # 5. Build-Informationen ausgeben
+      # ============================================================
+      - name: Build Summary
+        run: |
+          echo "## 🎉 Build erfolgreich!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build-Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build-Nummer:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build-Typ:** ${{ github.event.inputs.build_type || 'Release' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Download" >> $GITHUB_STEP_SUMMARY
+          echo "Die APK kann über den **Artifacts**-Bereich heruntergeladen werden." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📱 Installation" >> $GITHUB_STEP_SUMMARY
+          echo "1. APK herunterladen und entpacken" >> $GITHUB_STEP_SUMMARY
+          echo "2. Auf Android-Gerät übertragen" >> $GITHUB_STEP_SUMMARY
+          echo "3. Installation aus unbekannten Quellen erlauben" >> $GITHUB_STEP_SUMMARY
+          echo "4. APK installieren" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # Optionaler Job: Bei Release-Tags automatisch GitHub Release erstellen
+  # ============================================================
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: D8-Planer-XR-APK-${{ github.run_number }}
+          path: ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/**/*.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
