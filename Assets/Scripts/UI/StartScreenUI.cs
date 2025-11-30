@@ -131,10 +131,12 @@ namespace D8PlanerXR.UI
             }
             
             // Update status with folder info
-            string folderInfo = !string.IsNullOrEmpty(externalAppFolder) 
-                ? $"\nCSV-Ordner: {externalAppFolder}" 
-                : "";
-            UpdateStatus($"Bereit. Bitte CSV-Datei importieren oder Modus starten.{folderInfo}");
+            string statusMessage = "Bereit. Bitte CSV-Datei importieren oder Modus starten.";
+            if (!string.IsNullOrEmpty(externalAppFolder))
+            {
+                statusMessage = $"{statusMessage}\nCSV-Ordner: {externalAppFolder}";
+            }
+            UpdateStatus(statusMessage);
             
             isInitialized = true;
             Debug.Log("[StartScreenUI] Initialized");
@@ -181,7 +183,7 @@ namespace D8PlanerXR.UI
                         string readme = "D8-Planer XR - CSV Import Ordner\n" +
                                        "================================\n\n" +
                                        "Legen Sie Ihre CSV-Dateien aus dem DB Sauenplaner hier ab.\n" +
-                                       "Die App findet sie automatisch beim Oeffnen.\n\n" +
+                                       "Die App findet sie automatisch beim Öffnen.\n\n" +
                                        "Format: MusterPlan.csv (Semikolon-getrennt)\n";
                         File.WriteAllText(readmePath, readme);
                     }
