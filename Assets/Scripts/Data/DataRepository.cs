@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -232,11 +233,18 @@ namespace D8PlanerXR.Data
                             continue;
                         }
 
-                        // Deckdatum parsen (optional)
+                        // Deckdatum parsen (optional) - supports German date format DD.MM.YYYY
                         if (matingDateColumnIndex >= 0 && matingDateColumnIndex < values.Length)
                         {
                             string dateStr = CleanValue(values[matingDateColumnIndex]);
-                            if (DateTime.TryParse(dateStr, out DateTime matingDate))
+                            DateTime matingDate;
+                            
+                            // Try German date format first (DD.MM.YYYY)
+                            if (DateTime.TryParseExact(dateStr, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out matingDate) ||
+                                DateTime.TryParseExact(dateStr, "d.M.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out matingDate) ||
+                                DateTime.TryParseExact(dateStr, "dd.MM.yy", CultureInfo.InvariantCulture, DateTimeStyles.None, out matingDate) ||
+                                DateTime.TryParse(dateStr, new CultureInfo("de-DE"), DateTimeStyles.None, out matingDate) ||
+                                DateTime.TryParse(dateStr, out matingDate))
                             {
                                 sowData.matingDate = matingDate;
                                 sowData.daysSinceMating = (DateTime.Now - matingDate).Days;

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -13,6 +14,7 @@ namespace D8PlanerXR.UI
     /// Provides:
     /// - "Datei Öffnen" button to import CSV files into the database
     /// - "Modus starten" button to start VR/Camera mode based on device
+    /// - Access to app-specific external folder for file organization
     /// </summary>
     public class StartScreenUI : MonoBehaviour
     {
@@ -32,9 +34,12 @@ namespace D8PlanerXR.UI
         [SerializeField] private GameObject fileItemPrefab;
         [SerializeField] private Button filePickerCloseButton;
         [SerializeField] private TextMeshProUGUI filePickerTitleText;
+        [SerializeField] private TextMeshProUGUI currentPathText;
+        [SerializeField] private Button navigateUpButton;
         
         [Header("Settings")]
         [SerializeField] private string appTitle = "D8-Planer XR";
+        [SerializeField] private string appFolderName = "D8PlanerXR";
         [SerializeField] private string[] csvSearchPaths = new string[]
         {
             "", // persistentDataPath will be added
@@ -42,6 +47,10 @@ namespace D8PlanerXR.UI
             "Documents",
             "DCIM"
         };
+        
+        // External app folder path (accessible from file managers)
+        private string externalAppFolder = "";
+        private string currentBrowsePath = "";
         
         [Header("References")]
         [SerializeField] private GameObject mainCameraScene;
@@ -83,6 +92,9 @@ namespace D8PlanerXR.UI
             
             Debug.Log("[StartScreenUI] Initializing...");
             
+            // Setup external app folder for file organization
+            SetupExternalAppFolder();
+            
             // Set title
             if (titleText != null)
             {
@@ -118,11 +130,83 @@ namespace D8PlanerXR.UI
                 startScreenPanel.SetActive(true);
             }
             
-            // Update status
-            UpdateStatus("Bereit. Bitte CSV-Datei importieren oder Modus starten.");
+            // Update status with folder info
+            string statusMessage = "Bereit. Bitte CSV-Datei importieren oder Modus starten.";
+            if (!string.IsNullOrEmpty(externalAppFolder))
+            {
+                statusMessage = $"{statusMessage}\nCSV-Ordner: {externalAppFolder}";
+            }
+            UpdateStatus(statusMessage);
             
             isInitialized = true;
             Debug.Log("[StartScreenUI] Initialized");
+        }
+        
+        /// <summary>
+        /// Setup external app folder that's accessible from file managers
+        /// </summary>
+        private void SetupExternalAppFolder()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                // Get external storage directory accessible to file managers
+                using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+                {
+                    using (var currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
+                    {
+                        // Get app-specific external files directory (accessible without special permissions on Android 10+)
+                        using (var externalFilesDir = currentActivity.Call<AndroidJavaObject>("getExternalFilesDir", (string)null))
+                        {
+                            if (externalFilesDir != null)
+                            {
+                                externalAppFolder = externalFilesDir.Call<string>("getAbsolutePath");
+                            }
+                        }
+                    }
+                }
+                
+                // Create CSV subfolder
+                if (!string.IsNullOrEmpty(externalAppFolder))
+                {
+                    string csvFolder = Path.Combine(externalAppFolder, "CSV");
+                    if (!Directory.Exists(csvFolder))
+                    {
+                        Directory.CreateDirectory(csvFolder);
+                        Debug.Log($"[StartScreenUI] Created CSV folder: {csvFolder}");
+                    }
+                    
+                    // Create a README file to help users find the folder
+                    string readmePath = Path.Combine(csvFolder, "ANLEITUNG.txt");
+                    if (!File.Exists(readmePath))
+                    {
+                        string readme = "D8-Planer XR - CSV Import Ordner\n" +
+                                       "================================\n\n" +
+                                       "Legen Sie Ihre CSV-Dateien aus dem DB Sauenplaner hier ab.\n" +
+                                       "Die App findet sie automatisch beim Öffnen.\n\n" +
+                                       "Format: MusterPlan.csv (Semikolon-getrennt)\n";
+                        File.WriteAllText(readmePath, readme);
+                    }
+                }
+                
+                Debug.Log($"[StartScreenUI] External app folder: {externalAppFolder}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[StartScreenUI] Could not setup external folder: {e.Message}");
+                externalAppFolder = Application.persistentDataPath;
+            }
+#else
+            // On non-Android platforms, use persistent data path
+            externalAppFolder = Application.persistentDataPath;
+            
+            // Create CSV subfolder
+            string csvFolder = Path.Combine(externalAppFolder, "CSV");
+            if (!Directory.Exists(csvFolder))
+            {
+                Directory.CreateDirectory(csvFolder);
+            }
+#endif
         }
         
         /// <summary>
@@ -143,6 +227,26 @@ namespace D8PlanerXR.UI
             if (filePickerCloseButton != null)
             {
                 filePickerCloseButton.onClick.AddListener(CloseFilePicker);
+            }
+            
+            if (navigateUpButton != null)
+            {
+                navigateUpButton.onClick.AddListener(OnNavigateUpClicked);
+            }
+        }
+        
+        /// <summary>
+        /// Navigate up one directory level
+        /// </summary>
+        private void OnNavigateUpClicked()
+        {
+            if (string.IsNullOrEmpty(currentBrowsePath)) return;
+            
+            string parentPath = Directory.GetParent(currentBrowsePath)?.FullName;
+            if (!string.IsNullOrEmpty(parentPath) && Directory.Exists(parentPath))
+            {
+                currentBrowsePath = parentPath;
+                PopulateFileList();
             }
         }
         
@@ -275,6 +379,14 @@ namespace D8PlanerXR.UI
                 filePickerTitleText.text = "CSV-Datei auswählen";
             }
             
+            // Start from external app folder if available, otherwise persistent data path
+            if (string.IsNullOrEmpty(currentBrowsePath))
+            {
+                currentBrowsePath = !string.IsNullOrEmpty(externalAppFolder) 
+                    ? externalAppFolder 
+                    : Application.persistentDataPath;
+            }
+            
             PopulateFileList();
         }
         
@@ -302,8 +414,67 @@ namespace D8PlanerXR.UI
                 Destroy(child.gameObject);
             }
             
+            // Update current path display
+            if (currentPathText != null)
+            {
+                currentPathText.text = currentBrowsePath ?? "Alle Ordner";
+            }
+            
+            // If we have a specific browse path, show that folder
+            if (!string.IsNullOrEmpty(currentBrowsePath) && Directory.Exists(currentBrowsePath))
+            {
+                PopulateFromPath(currentBrowsePath);
+            }
+            else
+            {
+                // Show all known paths with CSV files
+                PopulateFromAllKnownPaths();
+            }
+        }
+        
+        /// <summary>
+        /// Populate file list from a specific path
+        /// </summary>
+        private void PopulateFromPath(string path)
+        {
+            if (!Directory.Exists(path)) return;
+            
+            try
+            {
+                // Show directories first
+                string[] directories = Directory.GetDirectories(path);
+                foreach (string dirPath in directories)
+                {
+                    CreateDirectoryListItem(dirPath);
+                }
+                
+                // Then show CSV files
+                string[] csvFiles = Directory.GetFiles(path, "*.csv", SearchOption.TopDirectoryOnly);
+                foreach (string filePath in csvFiles)
+                {
+                    CreateFileListItem(filePath);
+                }
+                
+                if (directories.Length == 0 && csvFiles.Length == 0)
+                {
+                    CreateInfoItem("Keine CSV-Dateien in diesem Ordner");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[StartScreenUI] Error populating from {path}: {e.Message}");
+                CreateInfoItem($"Fehler: {e.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Populate from all known paths
+        /// </summary>
+        private void PopulateFromAllKnownPaths()
+        {
             // Search for CSV files in known paths
             string[] searchPaths = GetSearchPaths();
+            bool foundAnyFile = false;
             
             foreach (string basePath in searchPaths)
             {
@@ -316,6 +487,7 @@ namespace D8PlanerXR.UI
                     foreach (string filePath in csvFiles)
                     {
                         CreateFileListItem(filePath);
+                        foundAnyFile = true;
                     }
                 }
                 catch (Exception e)
@@ -335,6 +507,7 @@ namespace D8PlanerXR.UI
                     foreach (string filePath in csvFiles)
                     {
                         CreateFileListItem(filePath);
+                        foundAnyFile = true;
                     }
                 }
                 catch (Exception e)
@@ -343,6 +516,86 @@ namespace D8PlanerXR.UI
                 }
             }
 #endif
+            
+            if (!foundAnyFile)
+            {
+                CreateInfoItem("Keine CSV-Dateien gefunden.\nLegen Sie Dateien im App-Ordner ab.");
+            }
+        }
+        
+        /// <summary>
+        /// Create an info/message item in the list
+        /// </summary>
+        private void CreateInfoItem(string message)
+        {
+            if (fileListContent == null) return;
+            
+            GameObject item = new GameObject("InfoItem");
+            item.transform.SetParent(fileListContent);
+            
+            var text = item.AddComponent<TextMeshProUGUI>();
+            text.text = message;
+            text.fontSize = 14;
+            text.color = Color.gray;
+            text.alignment = TextAlignmentOptions.Center;
+            
+            var rect = item.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(300, 60);
+            rect.localScale = Vector3.one;
+        }
+        
+        /// <summary>
+        /// Create a directory item in the list
+        /// </summary>
+        private void CreateDirectoryListItem(string dirPath)
+        {
+            if (fileListContent == null) return;
+            
+            GameObject item;
+            if (fileItemPrefab != null)
+            {
+                item = Instantiate(fileItemPrefab, fileListContent);
+            }
+            else
+            {
+                item = new GameObject("DirItem");
+                item.transform.SetParent(fileListContent);
+                
+                var button = item.AddComponent<Button>();
+                var text = item.AddComponent<TextMeshProUGUI>();
+                text.text = "[Ordner] " + Path.GetFileName(dirPath);
+                text.fontSize = 14;
+                text.color = new Color(0.3f, 0.6f, 1f); // Blue for folders
+                
+                var rect = item.GetComponent<RectTransform>();
+                rect.sizeDelta = new Vector2(300, 40);
+                rect.localScale = Vector3.one;
+            }
+            
+            // Setup click handler
+            var btn = item.GetComponent<Button>();
+            if (btn != null)
+            {
+                string path = dirPath; // Capture for closure
+                btn.onClick.AddListener(() => OnDirectorySelected(path));
+            }
+            
+            // Set directory name text
+            var textComponent = item.GetComponentInChildren<TextMeshProUGUI>();
+            if (textComponent != null)
+            {
+                textComponent.text = "📁 " + Path.GetFileName(dirPath);
+                textComponent.color = new Color(0.3f, 0.6f, 1f);
+            }
+        }
+        
+        /// <summary>
+        /// Handle directory selection (navigate into folder)
+        /// </summary>
+        private void OnDirectorySelected(string dirPath)
+        {
+            currentBrowsePath = dirPath;
+            PopulateFileList();
         }
         
         /// <summary>
@@ -350,7 +603,18 @@ namespace D8PlanerXR.UI
         /// </summary>
         private string[] GetSearchPaths()
         {
-            var paths = new System.Collections.Generic.List<string>();
+            var paths = new List<string>();
+            
+            // Add external app folder first (most accessible)
+            if (!string.IsNullOrEmpty(externalAppFolder))
+            {
+                paths.Add(externalAppFolder);
+                string csvSubfolder = Path.Combine(externalAppFolder, "CSV");
+                if (Directory.Exists(csvSubfolder))
+                {
+                    paths.Add(csvSubfolder);
+                }
+            }
             
             // Add persistent data path (always available)
             paths.Add(Application.persistentDataPath);
