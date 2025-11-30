@@ -3,6 +3,8 @@ REM ============================================================
 REM D8-Planer XR - Git Pull Script (Windows)
 REM ============================================================
 REM
+REM Repository: https://github.com/Bold202/3DoF_Deckzentrum.git
+REM
 REM Dieses Script holt die neuesten Aenderungen aus dem
 REM Git-Repository ins lokale Verzeichnis.
 REM
@@ -14,6 +16,9 @@ REM
 REM Voraussetzungen:
 REM   - Git muss installiert sein
 REM   - Das Script liegt im Projektverzeichnis
+REM
+REM Falls noch nicht geklont:
+REM   git clone https://github.com/Bold202/3DoF_Deckzentrum.git
 REM
 REM ============================================================
 
@@ -65,18 +70,69 @@ if %ERRORLEVEL% neq 0 (
 )
 
 REM ============================================================
+REM Repository URL
+REM ============================================================
+
+set "REPO_URL=https://github.com/Bold202/3DoF_Deckzentrum.git"
+
+REM ============================================================
 REM Pruefen ob es ein Git-Repository ist
 REM ============================================================
 
 if not exist ".git" (
     echo.
-    echo [FEHLER] Kein Git-Repository gefunden!
+    echo [INFO] Kein Git-Repository gefunden!
     echo.
-    echo Dieses Verzeichnis ist kein Git-Repository.
-    echo Bitte klone das Repository zuerst oder verschiebe
-    echo dieses Script in das richtige Verzeichnis.
+    echo Es sieht so aus, als haettest du das Repository als ZIP
+    echo heruntergeladen statt es zu klonen.
     echo.
-    goto :Error
+    echo Das Script kann das Repository jetzt initialisieren.
+    echo.
+    set /p INIT_REPO="Git-Repository initialisieren? (j/n): "
+    if /i "!INIT_REPO!" neq "j" (
+        echo.
+        echo [INFO] Alternativ kannst du das Repository neu klonen:
+        echo.
+        echo   git clone %REPO_URL%
+        echo.
+        goto :Error
+    )
+    
+    echo.
+    echo [INFO] Initialisiere Git-Repository...
+    git init
+    if %ERRORLEVEL% neq 0 (
+        echo [FEHLER] Git init fehlgeschlagen!
+        goto :Error
+    )
+    
+    echo [INFO] Fuege Remote-Repository hinzu...
+    git remote add origin %REPO_URL%
+    if %ERRORLEVEL% neq 0 (
+        echo [FEHLER] Git remote add fehlgeschlagen!
+        goto :Error
+    )
+    
+    echo [INFO] Hole Repository-Daten...
+    git fetch origin
+    if %ERRORLEVEL% neq 0 (
+        echo [FEHLER] Git fetch fehlgeschlagen!
+        goto :Error
+    )
+    
+    echo [INFO] Setze Branch auf main...
+    git reset --mixed origin/main
+    if %ERRORLEVEL% neq 0 (
+        echo [FEHLER] Git reset fehlgeschlagen!
+        goto :Error
+    )
+    
+    git branch -M main
+    git branch --set-upstream-to=origin/main main
+    
+    echo.
+    echo [OK] Git-Repository erfolgreich initialisiert!
+    echo.
 )
 
 echo [OK] Git-Repository erkannt.
