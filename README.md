@@ -96,7 +96,7 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 
 1. **Repository klonen**
    ```bash
-   git clone https://github.com/IhreFirma/3DoF_Deckzentrum.git
+   git clone https://github.com/Bold202/3DoF_Deckzentrum.git
    cd 3DoF_Deckzentrum
    ```
 
@@ -167,6 +167,23 @@ chmod +x build_apk.sh
 ```
 
 Die APK wird automatisch auf deinem Desktop gespeichert!
+
+## 🔄 Updates holen (Git Pull)
+
+Um die neuesten Änderungen zu holen:
+
+**Windows:**
+```batch
+pull_changes.bat
+```
+
+**macOS/Linux:**
+```bash
+chmod +x pull_changes.sh
+./pull_changes.sh
+```
+
+> **Hinweis:** Falls du das Repository als ZIP heruntergeladen hast (statt `git clone`), wird das Script automatisch anbieten, Git zu initialisieren.
 
 ## 🎯 Features im Detail
 
