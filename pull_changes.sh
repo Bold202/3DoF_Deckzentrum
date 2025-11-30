@@ -91,18 +91,38 @@ if [ ! -d ".git" ]; then
     
     echo ""
     echo "[INFO] Initialisiere Git-Repository..."
-    git init
+    if ! git init; then
+        echo "[FEHLER] Git init fehlgeschlagen!"
+        exit 1
+    fi
     
     echo "[INFO] Fuege Remote-Repository hinzu..."
-    git remote add origin "$REPO_URL"
+    if ! git remote add origin "$REPO_URL"; then
+        echo "[FEHLER] Git remote add fehlgeschlagen!"
+        exit 1
+    fi
     
     echo "[INFO] Hole Repository-Daten..."
-    git fetch origin
+    if ! git fetch origin; then
+        echo "[FEHLER] Git fetch fehlgeschlagen!"
+        exit 1
+    fi
     
     echo "[INFO] Setze Branch auf main..."
-    git reset --mixed origin/main
-    git branch -M main
-    git branch --set-upstream-to=origin/main main
+    if ! git reset --mixed origin/main; then
+        echo "[FEHLER] Git reset fehlgeschlagen!"
+        exit 1
+    fi
+    
+    if ! git branch -M main; then
+        echo "[FEHLER] Git branch -M fehlgeschlagen!"
+        exit 1
+    fi
+    
+    if ! git branch --set-upstream-to=origin/main main; then
+        echo "[FEHLER] Git branch --set-upstream-to fehlgeschlagen!"
+        exit 1
+    fi
     
     echo ""
     echo "[OK] Git-Repository erfolgreich initialisiert!"
@@ -117,7 +137,8 @@ echo ""
 # ============================================================
 
 echo "[INFO] Aktueller Branch:"
-git branch --show-current
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unbekannt")
+echo "$CURRENT_BRANCH"
 echo ""
 
 # ============================================================
@@ -125,10 +146,11 @@ echo ""
 # ============================================================
 
 echo "[INFO] Pruefe lokale Aenderungen..."
-git status --short
+git status --short 2>/dev/null || true
 
 # Warnung bei lokalen Aenderungen
-if [ -n "$(git status --porcelain)" ]; then
+LOCAL_CHANGES=$(git status --porcelain 2>/dev/null || echo "")
+if [ -n "$LOCAL_CHANGES" ]; then
     echo ""
     echo "[WARNUNG] Es gibt lokale Aenderungen im Repository."
     echo "          Diese koennten beim Pull zu Konflikten fuehren."
