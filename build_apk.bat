@@ -7,15 +7,15 @@ REM Dieses Script baut automatisch eine APK-Datei und exportiert
 REM sie auf den Desktop. Doppelklicken zum Ausfuehren.
 REM
 REM Voraussetzungen:
-REM   - Unity 2022.3 LTS mit Android Build Support installiert
-REM   - Projekt wurde mindestens einmal in Unity geoeffnet
-REM   - Setup-Wizard wurde ausgefuehrt
+REM    - Unity 2022.3 LTS mit Android Build Support installiert
+REM    - Projekt wurde mindestens einmal in Unity geoeffnet
+REM    - Assets/Editor/D8PlanerSetup.cs muss im Projekt existieren
 REM
 REM ============================================================
 
 setlocal enabledelayedexpansion
 
-REM Farbige Ausgabe aktivieren
+REM Farbige Ausgabe aktivieren (falls Terminal Support)
 color 0B
 
 echo ============================================================
@@ -50,45 +50,37 @@ if exist "%UNITY_HUB_PATH%" (
             echo [INFO] Unity gefunden: !UNITY_PATH!
         )
     )
-    
-    REM Falls keine 2022.3 gefunden, suche nach anderen Versionen
-    if "!UNITY_PATH!"=="" (
+)
+
+REM Fallback: Wenn keine 2022.3 im Hub gefunden wurde, suche allgemein
+if "!UNITY_PATH!"=="" (
+    if exist "%UNITY_HUB_PATH%" (
         for /d %%d in ("%UNITY_HUB_PATH%\*") do (
             if exist "%%d\Editor\Unity.exe" (
                 set "UNITY_PATH=%%d\Editor\Unity.exe"
-                echo [INFO] Unity gefunden: !UNITY_PATH!
+                echo [INFO] Unity (Fallback) gefunden: !UNITY_PATH!
             )
         )
     )
 )
 
-REM Pruefe alternative Installationspfade
+REM Fallback: Alte Pfade
 if "!UNITY_PATH!"=="" (
-    REM Alte Unity Installationen
-    if exist "%PROGRAMFILES%\Unity\Editor\Unity.exe" (
-        set "UNITY_PATH=%PROGRAMFILES%\Unity\Editor\Unity.exe"
-    )
-    if exist "%PROGRAMFILES(x86)%\Unity\Editor\Unity.exe" (
-        set "UNITY_PATH=%PROGRAMFILES(x86)%\Unity\Editor\Unity.exe"
-    )
+    if exist "%PROGRAMFILES%\Unity\Editor\Unity.exe" set "UNITY_PATH=%PROGRAMFILES%\Unity\Editor\Unity.exe"
+    if exist "%PROGRAMFILES(x86)%\Unity\Editor\Unity.exe" set "UNITY_PATH=%PROGRAMFILES(x86)%\Unity\Editor\Unity.exe"
 )
 
-REM Pruefe ob Unity gefunden wurde
+REM Abbruch wenn nichts gefunden
 if "!UNITY_PATH!"=="" (
     echo.
     echo [FEHLER] Unity konnte nicht gefunden werden!
-    echo.
-    echo Bitte installiere Unity 2022.3 LTS ueber Unity Hub
-    echo oder setze den Pfad manuell in diesem Script:
-    echo.
-    echo   set UNITY_PATH=C:\Program Files\Unity\Hub\Editor\2022.3.XX\Editor\Unity.exe
-    echo.
+    echo Bitte Pfad im Script manuell anpassen.
     pause
     exit /b 1
 )
 
 echo.
-echo [OK] Unity gefunden: !UNITY_PATH!
+echo [OK] Nutze Unity Version in: !UNITY_PATH!
 echo.
 
 REM ============================================================
@@ -104,34 +96,30 @@ set "TIMESTAMP=%dt:~0,4%%dt:~4,2%%dt:~6,2%_%dt:~8,2%%dt:~10,2%"
 set "APK_NAME=D8-Planer-XR_%TIMESTAMP%.apk"
 set "APK_PATH=%DESKTOP_PATH%\%APK_NAME%"
 
-REM Build-Log Pfad
+REM Log Pfad
+if not exist "%PROJECT_PATH%\Logs" mkdir "%PROJECT_PATH%\Logs"
 set "BUILD_LOG=%PROJECT_PATH%\Logs\build.log"
 
-echo [INFO] APK wird exportiert nach: %APK_PATH%
+echo [INFO] Ziel-Datei: %APK_PATH%
 echo.
 
 REM ============================================================
 REM Unity Build starten
 REM ============================================================
 
-echo [INFO] Starte Unity Build-Prozess...
-echo [INFO] Dies kann einige Minuten dauern. Bitte warten...
+echo [INFO] Starte Unity Build-Prozess (Batchmode)...
+echo [INFO] Dies kann einige Minuten dauern (Kaffee holen!)...
 echo.
 
-REM Logs-Verzeichnis erstellen falls nicht vorhanden
-if not exist "%PROJECT_PATH%\Logs" mkdir "%PROJECT_PATH%\Logs"
-
-REM Unity im Batch-Modus starten
+REM WICHTIG: -executeMethod muss exakt zum C#-Script passen (D8PlanerSetup.BuildAPK)
 "!UNITY_PATH!" ^
     -quit ^
     -batchmode ^
     -nographics ^
     -projectPath "%PROJECT_PATH%" ^
-    -executeMethod D8PlanerXR.Editor.CommandLineBuild.BuildAndroid ^
-    -buildOutput "%APK_PATH%" ^
+    -executeMethod D8PlanerSetup.BuildAPK ^
     -logFile "%BUILD_LOG%"
 
-REM Exit-Code pruefen
 set "BUILD_RESULT=%ERRORLEVEL%"
 
 echo.
@@ -140,48 +128,18 @@ if %BUILD_RESULT% EQU 0 (
     echo    BUILD ERFOLGREICH!
     echo ============================================================
     echo.
-    echo [OK] APK wurde erstellt: %APK_PATH%
-    echo.
-    
-    REM Dateigroesse anzeigen
-    if exist "%APK_PATH%" (
-        for %%A in ("%APK_PATH%") do (
-            set /a SIZE=%%~zA / 1048576
-            echo [INFO] Dateigroesse: !SIZE! MB
-        )
-    )
-    echo.
-    echo Naechste Schritte:
-    echo   1. APK auf Android-Geraet kopieren
-    echo   2. APK installieren
-    echo   3. App testen
+    echo [OK] APK liegt hier: %APK_PATH%
     echo.
 ) else (
     echo ============================================================
-    echo    BUILD FEHLGESCHLAGEN!
+    echo    BUILD FEHLGESCHLAGEN! (Fehlercode: %BUILD_RESULT%)
     echo ============================================================
     echo.
-    echo [FEHLER] Build-Prozess hat Fehler zurueckgegeben: %BUILD_RESULT%
-    echo.
-    echo Pruefe das Build-Log fuer Details:
-    echo   %BUILD_LOG%
-    echo.
-    echo Haeufige Fehlerursachen:
-    echo   - Unity wurde noch nie mit diesem Projekt geoeffnet
-    echo   - Android Build Support fehlt
-    echo   - Setup-Wizard wurde nicht ausgefuehrt
-    echo   - XR Plugin Management nicht aktiviert
-    echo.
-    echo Loesungsschritte:
-    echo   1. Oeffne das Projekt in Unity
-    echo   2. Warte bis alle Assets importiert sind
-    echo   3. Fuehre den Setup-Wizard aus: D8-Planer ^> Alle Einstellungen anwenden
-    echo   4. Aktiviere ARCore: Edit ^> Project Settings ^> XR Plug-in Management
-    echo   5. Fuehre dieses Script erneut aus
+    echo [FEHLER] Details siehe Logdatei:
+    echo %BUILD_LOG%
     echo.
 )
 
-echo.
 echo Druecke eine Taste zum Beenden...
 pause >nul
 exit /b %BUILD_RESULT%
