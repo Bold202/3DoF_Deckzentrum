@@ -88,12 +88,12 @@ namespace D8PlanerXR.AR
 
         /// <summary>
         /// Verzögerte Prüfung ob Scanning gestartet werden soll.
-        /// Wartet einen Frame, um sicherzustellen dass AppController.Instance verfügbar ist.
+        /// Wartet kurz, um sicherzustellen dass AppController.Instance verfügbar ist.
         /// </summary>
         private IEnumerator DelayedStartCheck()
         {
-            // Warte einen Frame, damit AppController.Instance initialisiert werden kann
-            yield return null;
+            // Warte kurz, damit AppController.Instance initialisiert werden kann
+            yield return new WaitForSeconds(0.1f);
             
             if (ShouldBeScanning())
             {
@@ -146,9 +146,7 @@ namespace D8PlanerXR.AR
                 return AppController.Instance.IsARActive;
             }
 
-            // Fallback: Wenn kein AppController vorhanden ist, nicht scannen.
-            // Dies verhindert unerwartetes Verhalten wenn die Szene nicht korrekt konfiguriert ist.
-            // In einer korrekt konfigurierten Szene sollte AppController immer vorhanden sein.
+            // Fallback: No scanning without AppController to prevent unexpected behavior
             if (showDebugInfo)
             {
                 Debug.LogWarning("[QRCodeTracker] AppController.Instance ist null - Scanning deaktiviert. " +
@@ -254,7 +252,11 @@ namespace D8PlanerXR.AR
                     {
                         Debug.Log("[QRCodeTracker] Scanning gestoppt - AR nicht aktiv");
                     }
-                    // Coroutine beenden, sie wird von AppController.StartAR() neu gestartet
+                    // Coroutine sauber stoppen, bevor wir die Referenz löschen
+                    if (scanCoroutine != null)
+                    {
+                        StopCoroutine(scanCoroutine);
+                    }
                     scanCoroutine = null;
                     yield break;
                 }

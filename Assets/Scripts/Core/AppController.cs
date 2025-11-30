@@ -230,7 +230,8 @@ namespace D8PlanerXR.Core
             // AR Komponenten prüfen (Warnung, da diese auch automatisch gefunden werden können)
             if (qrTracker == null)
             {
-                qrTracker = FindObjectOfType<QRCodeTracker>(true); // true = auch inaktive suchen
+                // Auch in inaktiven GameObjects suchen
+                qrTracker = FindObjectOfType<QRCodeTracker>(true);
                 if (qrTracker != null)
                 {
                     Debug.Log("[AppController] ✓ QR Tracker automatisch gefunden");
