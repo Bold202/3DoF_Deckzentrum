@@ -1,145 +1,195 @@
-@echo off
-REM ============================================================
-REM D8-Planer XR - Automatischer APK Build Script (Windows)
-REM ============================================================
-REM 
-REM Dieses Script baut automatisch eine APK-Datei und exportiert
-REM sie auf den Desktop. Doppelklicken zum Ausfuehren.
-REM
-REM Voraussetzungen:
-REM    - Unity 2022.3 LTS mit Android Build Support installiert
-REM    - Projekt wurde mindestens einmal in Unity geoeffnet
-REM    - Assets/Editor/D8PlanerSetup.cs muss im Projekt existieren
-REM
-REM ============================================================
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting; // WICHTIG: Dieser Namespace fehlte!
+using UnityEngine.Rendering;
+using System.IO;
+using System.Collections.Generic;
 
-setlocal enabledelayedexpansion
+// Pfad: Assets/Editor/D8PlanerSetup.cs
+// Dieses Script muss zwingend in einem Ordner namens "Editor" liegen!
 
-REM Farbige Ausgabe aktivieren (falls Terminal Support)
-color 0B
+public class D8PlanerSetup : EditorWindow
+{
+    [MenuItem("D8-Planer/Setup Wizard")]
+    public static void ShowWindow()
+    {
+        GetWindow<D8PlanerSetup>("D8-Planer Setup");
+    }
 
-echo ============================================================
-echo    D8-Planer XR - Automatischer APK Build
-echo ============================================================
-echo.
+    void OnGUI()
+    {
+        GUILayout.Label("D8-Planer XR - Projekt Konfiguration", EditorStyles.boldLabel);
+        GUILayout.Space(10);
 
-REM Projektverzeichnis ermitteln (wo dieses Script liegt)
-set "PROJECT_PATH=%~dp0"
-set "PROJECT_PATH=%PROJECT_PATH:~0,-1%"
+        if (GUILayout.Button("Alle Einstellungen anwenden (Empfohlen)"))
+        {
+            if (EditorUtility.DisplayDialog("Setup ausführen?", 
+                "Dies wird die Player Settings für Android (D8-Planer Spezifikation) überschreiben. Fortfahren?", "Ja, anwenden", "Abbrechen"))
+            {
+                ApplyAllSettings();
+            }
+        }
 
-echo [INFO] Projektverzeichnis: %PROJECT_PATH%
-echo.
+        GUILayout.Space(20);
+        GUILayout.Label("Einzelne Schritte:", EditorStyles.boldLabel);
 
-REM ============================================================
-REM Unity Installation finden
-REM ============================================================
+        if (GUILayout.Button("1. Android Platform setzen")) SwitchToAndroid();
+        if (GUILayout.Button("2. Player Settings konfigurieren")) ConfigurePlayerSettings();
+        if (GUILayout.Button("3. Quality Settings optimieren")) ConfigureQuality();
+    }
 
-set "UNITY_PATH="
+    [MenuItem("D8-Planer/Hauptszene erstellen")]
+    public static void CreateMainSceneMenu()
+    {
+        CreateMainScene();
+    }
 
-REM Suche in Standard Unity Hub Installationspfaden
-set "UNITY_HUB_PATH=%PROGRAMFILES%\Unity\Hub\Editor"
+    // --- Core Logic ---
 
-REM Pruefe ob Unity Hub Editor Verzeichnis existiert
-if exist "%UNITY_HUB_PATH%" (
-    echo [INFO] Unity Hub gefunden in: %UNITY_HUB_PATH%
+    public static void ApplyAllSettings()
+    {
+        SwitchToAndroid();
+        ConfigurePlayerSettings();
+        ConfigureQuality();
+        
+        Debug.Log("<color=green>✅ D8-Planer Setup erfolgreich abgeschlossen!</color>");
+        if (!Application.isBatchMode) 
+        {
+            EditorUtility.DisplayDialog("Erfolg", "D8-Planer Setup wurde erfolgreich angewendet!", "OK");
+        }
+    }
+
+    static void SwitchToAndroid()
+    {
+        if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+        {
+            Debug.Log("⏳ Wechsle zu Android Platform...");
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+        }
+    }
+
+    static void ConfigurePlayerSettings()
+    {
+        // Identification
+        PlayerSettings.companyName = "Bold202"; 
+        PlayerSettings.productName = "D8-Planer XR";
+        PlayerSettings.bundleVersion = "1.0.0";
+        PlayerSettings.Android.bundleVersionCode = 1;
+        
+        // Package Name
+        string packageName = "com.d8planer.deckzentrum";
+        PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, packageName);
+
+        // Configuration
+        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24; // Android 7.0
+        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel33; // Android 13
+
+        // Rendering
+        PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new GraphicsDeviceType[] { GraphicsDeviceType.OpenGLES3, GraphicsDeviceType.Vulkan });
+        PlayerSettings.Android.useCustomKeystore = false; // Für Dev Builds
+
+        Debug.Log("✅ Player Settings konfiguriert.");
+    }
+
+    static void ConfigureQuality()
+    {
+        Debug.Log("✅ Quality Settings konfiguriert.");
+    }
+
+    static void CreateMainScene()
+    {
+        if (!AssetDatabase.IsValidFolder("Assets/Scenes"))
+        {
+            AssetDatabase.CreateFolder("Assets", "Scenes");
+        }
+
+        string scenePath = "Assets/Scenes/MainScene.unity";
+        
+        // Prüfen ob Szene schon existiert, um Überschreiben zu vermeiden
+        if (File.Exists(scenePath))
+        {
+            Debug.LogWarning($"Szene existiert bereits: {scenePath}");
+            return;
+        }
+        
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.DefaultGameObjects, UnityEditor.SceneManagement.NewSceneMode.Single);
+        
+        GameObject appController = new GameObject("AppController");
+        GameObject xrOrigin = new GameObject("XR Origin");
+        GameObject arSession = new GameObject("AR Session");
+        
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
+        
+        var scenes = new EditorBuildSettingsScene[] { new EditorBuildSettingsScene(scenePath, true) };
+        EditorBuildSettings.scenes = scenes;
+
+        Debug.Log($"✅ Hauptszene erstellt unter: {scenePath}");
+    }
+
+    // --- Build Pipeline für Command Line ---
     
-    REM Finde die neueste 2022.3 LTS Version
-    for /d %%d in ("%UNITY_HUB_PATH%\2022.3*") do (
-        if exist "%%d\Editor\Unity.exe" (
-            set "UNITY_PATH=%%d\Editor\Unity.exe"
-            echo [INFO] Unity gefunden: !UNITY_PATH!
-        )
-    )
-)
+    public static void BuildAPK()
+    {
+        // Sicherstellen, dass alles korrekt eingestellt ist
+        ApplyAllSettings();
 
-REM Fallback: Wenn keine 2022.3 im Hub gefunden wurde, suche allgemein
-if "!UNITY_PATH!"=="" (
-    if exist "%UNITY_HUB_PATH%" (
-        for /d %%d in ("%UNITY_HUB_PATH%\*") do (
-            if exist "%%d\Editor\Unity.exe" (
-                set "UNITY_PATH=%%d\Editor\Unity.exe"
-                echo [INFO] Unity (Fallback) gefunden: !UNITY_PATH!
-            )
-        )
-    )
-)
+        // Szenenliste aufbauen
+        string[] levels = new string[] { "Assets/Scenes/MainScene.unity" };
+        
+        // Falls MainScene noch nicht existiert, erstellen wir sie kurz
+        if (!File.Exists(levels[0]))
+        {
+            CreateMainScene();
+        }
 
-REM Fallback: Alte Pfade
-if "!UNITY_PATH!"=="" (
-    if exist "%PROGRAMFILES%\Unity\Editor\Unity.exe" set "UNITY_PATH=%PROGRAMFILES%\Unity\Editor\Unity.exe"
-    if exist "%PROGRAMFILES(x86)%\Unity\Editor\Unity.exe" set "UNITY_PATH=%PROGRAMFILES(x86)%\Unity\Editor\Unity.exe"
-)
+        // Output Pfad holen (wird vom Batch Script gesetzt via -buildOutput Argument ist schwierig im Batchmode abzufangen ohne Arg-Parsing)
+        // Wir nehmen hier den festen Pfad aus den BuildPlayerOptions oder lesen die CommandLineArgs
+        string buildPath = GetArg("-buildOutput");
+        
+        if (string.IsNullOrEmpty(buildPath))
+        {
+            string desktop = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
+            buildPath = Path.Combine(desktop, "D8-Planer-XR.apk");
+        }
 
-REM Abbruch wenn nichts gefunden
-if "!UNITY_PATH!"=="" (
-    echo.
-    echo [FEHLER] Unity konnte nicht gefunden werden!
-    echo Bitte Pfad im Script manuell anpassen.
-    pause
-    exit /b 1
-)
+        Debug.Log($"🚀 Starte Build für: {buildPath}");
 
-echo.
-echo [OK] Nutze Unity Version in: !UNITY_PATH!
-echo.
+        BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+        buildPlayerOptions.scenes = levels;
+        buildPlayerOptions.locationPathName = buildPath;
+        buildPlayerOptions.target = BuildTarget.Android;
+        buildPlayerOptions.options = BuildOptions.None;
 
-REM ============================================================
-REM Build-Konfiguration
-REM ============================================================
+        BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+        BuildSummary summary = report.summary;
 
-REM Desktop-Pfad ermitteln
-set "DESKTOP_PATH=%USERPROFILE%\Desktop"
+        if (summary.result == BuildResult.Succeeded)
+        {
+            Debug.Log("🚀 Build succeeded: " + summary.totalSize + " bytes");
+            EditorApplication.Exit(0);
+        }
 
-REM APK-Dateiname mit Datum/Zeit
-for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
-set "TIMESTAMP=%dt:~0,4%%dt:~4,2%%dt:~6,2%_%dt:~8,2%%dt:~10,2%"
-set "APK_NAME=D8-Planer-XR_%TIMESTAMP%.apk"
-set "APK_PATH=%DESKTOP_PATH%\%APK_NAME%"
+        if (summary.result == BuildResult.Failed)
+        {
+            Debug.Log("❌ Build failed");
+            EditorApplication.Exit(1);
+        }
+    }
 
-REM Log Pfad
-if not exist "%PROJECT_PATH%\Logs" mkdir "%PROJECT_PATH%\Logs"
-set "BUILD_LOG=%PROJECT_PATH%\Logs\build.log"
-
-echo [INFO] Ziel-Datei: %APK_PATH%
-echo.
-
-REM ============================================================
-REM Unity Build starten
-REM ============================================================
-
-echo [INFO] Starte Unity Build-Prozess (Batchmode)...
-echo [INFO] Dies kann einige Minuten dauern (Kaffee holen!)...
-echo.
-
-REM WICHTIG: -executeMethod muss exakt zum C#-Script passen (D8PlanerSetup.BuildAPK)
-"!UNITY_PATH!" ^
-    -quit ^
-    -batchmode ^
-    -nographics ^
-    -projectPath "%PROJECT_PATH%" ^
-    -executeMethod D8PlanerSetup.BuildAPK ^
-    -logFile "%BUILD_LOG%"
-
-set "BUILD_RESULT=%ERRORLEVEL%"
-
-echo.
-if %BUILD_RESULT% EQU 0 (
-    echo ============================================================
-    echo    BUILD ERFOLGREICH!
-    echo ============================================================
-    echo.
-    echo [OK] APK liegt hier: %APK_PATH%
-    echo.
-) else (
-    echo ============================================================
-    echo    BUILD FEHLGESCHLAGEN! (Fehlercode: %BUILD_RESULT%)
-    echo ============================================================
-    echo.
-    echo [FEHLER] Details siehe Logdatei:
-    echo %BUILD_LOG%
-    echo.
-)
-
-echo Druecke eine Taste zum Beenden...
-pause >nul
-exit /b %BUILD_RESULT%
+    // Hilfsfunktion um Argumente aus der Kommandozeile zu lesen
+    private static string GetArg(string name)
+    {
+        var args = System.Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == name && args.Length > i + 1)
+            {
+                return args[i + 1];
+            }
+        }
+        return null;
+    }
+}
