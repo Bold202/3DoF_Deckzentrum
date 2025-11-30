@@ -245,5 +245,91 @@ namespace D8PlanerXR.Tests
                 return -1;
             }
         }
+        
+        [Test]
+        public void DateParsing_GermanFormat_ParsesCorrectly()
+        {
+            // Test German date format DD.MM.YYYY
+            string dateStr = "13.07.2025";
+            
+            DateTime result;
+            bool success = DateTime.TryParseExact(
+                dateStr, 
+                "dd.MM.yyyy", 
+                System.Globalization.CultureInfo.InvariantCulture, 
+                System.Globalization.DateTimeStyles.None, 
+                out result
+            );
+            
+            Assert.IsTrue(success, "German date format should parse successfully");
+            Assert.AreEqual(13, result.Day);
+            Assert.AreEqual(7, result.Month);
+            Assert.AreEqual(2025, result.Year);
+        }
+        
+        [Test]
+        public void DateParsing_ShortGermanFormat_ParsesCorrectly()
+        {
+            // Test short German date format D.M.YYYY
+            string dateStr = "5.7.2025";
+            
+            DateTime result;
+            bool success = DateTime.TryParseExact(
+                dateStr, 
+                "d.M.yyyy", 
+                System.Globalization.CultureInfo.InvariantCulture, 
+                System.Globalization.DateTimeStyles.None, 
+                out result
+            );
+            
+            Assert.IsTrue(success, "Short German date format should parse successfully");
+            Assert.AreEqual(5, result.Day);
+            Assert.AreEqual(7, result.Month);
+            Assert.AreEqual(2025, result.Year);
+        }
+        
+        [Test]
+        public void CleanValue_RemovesQuotesAndSpaces()
+        {
+            string[] testInputs = new string[]
+            {
+                "\"     602\"",
+                "\"165   \"",
+                "\" -3\"",
+                "\"13.07.2025\""
+            };
+            
+            string[] expectedOutputs = new string[]
+            {
+                "602",
+                "165",
+                "-3",
+                "13.07.2025"
+            };
+            
+            for (int i = 0; i < testInputs.Length; i++)
+            {
+                string result = CleanValue(testInputs[i]);
+                Assert.AreEqual(expectedOutputs[i], result, 
+                    $"Failed to clean '{testInputs[i]}'. Expected '{expectedOutputs[i]}', got '{result}'");
+            }
+        }
+        
+        /// <summary>
+        /// Helper method matching DataRepository's CleanValue implementation
+        /// </summary>
+        private string CleanValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            
+            string cleaned = value.Trim();
+            if (cleaned.StartsWith("\"") && cleaned.EndsWith("\""))
+            {
+                cleaned = cleaned.Substring(1, cleaned.Length - 2);
+            }
+            cleaned = cleaned.Trim();
+            
+            return cleaned;
+        }
     }
 }
