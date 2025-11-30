@@ -12,6 +12,14 @@ namespace D8PlanerXR.AR
     /// QR-Code Tracking für AR
     /// Erkennt QR-Codes in der Kamera und erstellt Spatial Anchors
     /// Unterstützt VR-Modus (Viture) und Handy-Modus
+    /// 
+    /// WICHTIG: Dieses Skript scannt nur, wenn:
+    /// 1. Das AR_Environment aktiviert ist (das GameObject, unter dem dieser Tracker liegt)
+    /// 2. Der AppController im AR-Modus ist (AppState.AR)
+    /// 
+    /// Das Scanning wird automatisch gestartet/gestoppt durch:
+    /// - AppController.StartAR() → startet Scanning
+    /// - AppController.StopAR() → stoppt Scanning
     /// </summary>
     [RequireComponent(typeof(ARCameraManager))]
     public class QRCodeTracker : MonoBehaviour
@@ -52,6 +60,11 @@ namespace D8PlanerXR.AR
 
         private Coroutine scanCoroutine;
         private Texture2D cameraTexture;
+        
+        /// <summary>
+        /// Gibt true zurück, wenn das Scanning aktiv ist
+        /// </summary>
+        public bool IsScanning => scanCoroutine != null;
 
         private void Start()
         {
@@ -66,12 +79,82 @@ namespace D8PlanerXR.AR
             // Scan-Intervall basierend auf Gerätemodus anpassen
             UpdateScanIntervalForMode();
 
-            StartScanning();
+            // WICHTIG: Nicht automatisch starten!
+            // Das Scanning wird vom AppController gestartet, wenn AR aktiviert wird.
+            // Wir starten nur, wenn das GameObject aktiv ist UND wir im AR-Modus sind.
+            // StartCoroutine wird verzögert aufgerufen, um sicherzustellen dass AppController initialisiert ist.
+            StartCoroutine(DelayedStartCheck());
+        }
+
+        /// <summary>
+        /// Verzögerte Prüfung ob Scanning gestartet werden soll.
+        /// Wartet einen Frame, um sicherzustellen dass AppController.Instance verfügbar ist.
+        /// </summary>
+        private IEnumerator DelayedStartCheck()
+        {
+            // Warte einen Frame, damit AppController.Instance initialisiert werden kann
+            yield return null;
+            
+            if (ShouldBeScanning())
+            {
+                StartScanning();
+            }
+            else
+            {
+                if (showDebugInfo)
+                {
+                    Debug.Log("[QRCodeTracker] Warte auf AR-Modus Aktivierung...");
+                }
+            }
+        }
+
+        private void OnEnable()
+        {
+            // Wenn das GameObject aktiviert wird, prüfen ob wir scannen sollten
+            if (barcodeReader != null && ShouldBeScanning())
+            {
+                StartScanning();
+            }
+        }
+
+        private void OnDisable()
+        {
+            // Wenn das GameObject deaktiviert wird, Scanning stoppen
+            StopScanning();
         }
 
         private void OnDestroy()
         {
             StopScanning();
+        }
+
+        /// <summary>
+        /// Prüft, ob das Scanning aktiv sein sollte.
+        /// Berücksichtigt: AR_Environment aktiv, AppController im AR-Modus
+        /// </summary>
+        private bool ShouldBeScanning()
+        {
+            // Prüfen ob das eigene GameObject aktiv ist (AR_Environment Hierarchie)
+            if (!gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            // Prüfen ob der AppController im AR-Modus ist
+            if (AppController.Instance != null)
+            {
+                return AppController.Instance.IsARActive;
+            }
+
+            // Fallback: Wenn kein AppController vorhanden ist, nicht scannen.
+            // Dies verhindert unerwartetes Verhalten wenn die Szene nicht korrekt konfiguriert ist.
+            // In einer korrekt konfigurierten Szene sollte AppController immer vorhanden sein.
+            if (showDebugInfo)
+            {
+                Debug.LogWarning("[QRCodeTracker] AppController.Instance ist null - Scanning deaktiviert. " +
+                    "Bitte sicherstellen, dass AppController in der Szene vorhanden ist.");
+            }
+            return false;
         }
 
         /// <summary>
@@ -153,13 +236,28 @@ namespace D8PlanerXR.AR
         }
 
         /// <summary>
-        /// Hauptschleife für QR-Code Erkennung
+        /// Hauptschleife für QR-Code Erkennung.
+        /// Die Coroutine stoppt sich selbst wenn AR nicht mehr aktiv ist.
+        /// Sie wird vom AppController.StartAR() neu gestartet.
         /// </summary>
         private IEnumerator ScanForQRCodes()
         {
             while (true)
             {
                 yield return new WaitForSeconds(scanInterval);
+
+                // Prüfen ob wir noch scannen sollten
+                // Wenn AR nicht mehr aktiv ist, beenden wir die Coroutine
+                if (!ShouldBeScanning())
+                {
+                    if (showDebugInfo)
+                    {
+                        Debug.Log("[QRCodeTracker] Scanning gestoppt - AR nicht aktiv");
+                    }
+                    // Coroutine beenden, sie wird von AppController.StartAR() neu gestartet
+                    scanCoroutine = null;
+                    yield break;
+                }
 
 #if UNITY_EDITOR
                 if (simulateQRCodesInEditor)
