@@ -18,7 +18,7 @@ namespace D8PlanerXR.Editor
         private const string COMPANY_NAME = "D8-Planer";
         private const string PRODUCT_NAME = "D8-Planer XR";
         private const string PACKAGE_NAME = "com.d8planer.deckzentrum";
-        private const string VERSION = "1.1.0";
+        private const string VERSION = "1.2.0";
         
         // Android API Levels
         private const int MIN_API_LEVEL = 24;  // Android 7.0

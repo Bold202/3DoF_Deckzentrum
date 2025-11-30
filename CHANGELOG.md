@@ -262,4 +262,4 @@ Dieses Projekt folgt [Semantic Versioning](https://semver.org/):
 
 ---
 
-*Letzte Aktualisierung: 2025-11-26*
+*Letzte Aktualisierung: 2025-11-30*
