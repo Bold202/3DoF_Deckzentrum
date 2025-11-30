@@ -453,4 +453,4 @@ Bei Fragen: support@ihre-firma.de
 
 ---
 
-*Version: 1.0 | Letzte Aktualisierung: 2025-11-26*
+*Version: 1.1 | Letzte Aktualisierung: 2025-11-30*

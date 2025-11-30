@@ -441,7 +441,15 @@ adb push ImportDZ.csv /sdcard/Android/data/com.IhreFirma.D8PlanerXR/files/
 
 ## 8. Handy-Modus vs. VR-Modus
 
-Ab Version 1.1 unterstützt die App zwei Modi:
+Ab Version 1.2 wird der **Handy-Modus (Mobile-First)** priorisiert entwickelt:
+
+### 📱 Handy-Modus (Smartphone) - EMPFOHLEN für Einstieg
+- Für normale Android-Smartphones
+- **NEU:** Vereinfachte WebCam-basierte QR-Erkennung
+- Automatische Kamera-Initialisierung beim App-Start
+- Haptic-Feedback bei erfolgreicher QR-Code-Erkennung
+- MusterPlan.csv Format wird nativ unterstützt
+- Keine zusätzliche Hardware nötig
 
 ### 🕶️ VR-Modus (Viture-Brille)
 - Für Viture Neckband Pro + Luma Ultra
@@ -449,25 +457,20 @@ Ab Version 1.1 unterstützt die App zwei Modi:
 - Kopfbewegung-Tracking
 - Spatial Anchoring
 
-### 📱 Handy-Modus (Smartphone)
-- Für normale Android-Smartphones
-- Nur Kamera-basiertes AR
-- QR-Code Scanning
-- Overlay-Anzeige
-
 ### Modus wechseln
 
 **In der App:**
-1. App starten
+1. App starten (startet standardmäßig im Handy-Modus)
 2. Hauptmenü → **"Einstellungen"**
 3. **"Anzeigemodus"** wählen:
+   - 📱 Handy-Modus (Standard)
    - 🕶️ VR-Modus
-   - 📱 Handy-Modus
 4. App neu starten
 
 **Automatische Erkennung:**
-- App erkennt automatisch ob Viture-Hardware verbunden ist
-- Falls nicht: Handy-Modus wird verwendet
+- App startet standardmäßig im Handy-Modus
+- Erkennt automatisch ob Viture-Hardware verbunden ist
+- VR-Modus kann manuell aktiviert werden
 
 ### Unterschiede in den Modi
 
@@ -475,6 +478,8 @@ Ab Version 1.1 unterstützt die App zwei Modi:
 |---------|----------|-------------|
 | QR-Code Scanning | ✅ | ✅ |
 | Overlay-Anzeige | ✅ | ✅ |
+| MusterPlan.csv Support | ✅ | ✅ |
+| Haptic-Feedback | ⚠️ Eingeschränkt | ✅ |
 | Spatial Anchoring | ✅ | ⚠️ Eingeschränkt |
 | Virtuelles Deckzentrum | ✅ | ❌ |
 | Kopf-Tracking | ✅ | ❌ |
@@ -586,4 +591,4 @@ Bei Problemen:
 
 ---
 
-*Version: 1.1 | Letzte Aktualisierung: 2025-11-26*
+*Version: 1.2 | Letzte Aktualisierung: 2025-11-30*

@@ -290,5 +290,5 @@ Bei Fragen:
 ---
 
 **Status:** ✅ Kernfunktionalität implementiert, VR + Handy-Modus verfügbar  
-**Version:** 1.1  
-**Letzte Aktualisierung:** 2025-11-26
+**Version:** 1.2  
+**Letzte Aktualisierung:** 2025-11-30
