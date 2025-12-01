@@ -199,6 +199,52 @@ if %PULL_RESULT% equ 0 (
     git --no-pager log --oneline -3
     echo.
     
+    REM ============================================================
+    REM Unity automatisch starten
+    REM ============================================================
+    
+    echo [INFO] Starte Unity mit dem Projekt...
+    echo.
+    
+    set "UNITY_PATH="
+    
+    REM Suche nach Unity 2022.3 LTS
+    for /d %%D in ("C:\Program Files\Unity\Hub\Editor\2022.3*") do (
+        if exist "%%D\Editor\Unity.exe" (
+            set "UNITY_PATH=%%D\Editor\Unity.exe"
+        )
+    )
+    
+    if not defined UNITY_PATH (
+        for /d %%D in ("%LOCALAPPDATA%\Unity\Editor\2022.3*") do (
+            if exist "%%D\Editor\Unity.exe" (
+                set "UNITY_PATH=%%D\Editor\Unity.exe"
+            )
+        )
+    )
+    
+    if not defined UNITY_PATH (
+        for /d %%D in ("%USERPROFILE%\Unity\Hub\Editor\2022.3*") do (
+            if exist "%%D\Editor\Unity.exe" (
+                set "UNITY_PATH=%%D\Editor\Unity.exe"
+            )
+        )
+    )
+    
+    if defined UNITY_PATH (
+        echo [OK] Unity gefunden: !UNITY_PATH!
+        echo [INFO] Oeffne Unity-Projekt...
+        echo.
+        REM Unity starten - start /b startet im Hintergrund
+        start "" "!UNITY_PATH!" -projectPath "%PROJECT_PATH%"
+        echo [OK] Unity wird gestartet. Das Projekt wird geoeffnet.
+        echo      Du kannst dann auf 'Build' klicken wenn du moechtest.
+    ) else (
+        echo [INFO] Unity nicht automatisch gefunden.
+        echo        Oeffne das Projekt manuell in Unity Hub.
+    )
+    echo.
+    
     goto :Success
 )
 
