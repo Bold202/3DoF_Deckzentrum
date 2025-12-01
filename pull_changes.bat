@@ -154,19 +154,43 @@ echo [INFO] Pruefe lokale Aenderungen...
 git status --short
 
 REM Warnung bei lokalen Aenderungen
-for /f %%i in ('git status --porcelain') do (
+set "HAS_CHANGES=0"
+for /f %%i in ('git status --porcelain 2^>nul') do (
+    set "HAS_CHANGES=1"
+)
+
+set "STASHED=0"
+if "%HAS_CHANGES%"=="1" (
     echo.
     echo [WARNUNG] Es gibt lokale Aenderungen im Repository.
     echo           Diese koennten beim Pull zu Konflikten fuehren.
     echo.
-    set /p CONTINUE="Trotzdem fortfahren? (j/n): "
-    if /i "!CONTINUE!" neq "j" (
+    echo Optionen:
+    echo   [1] Aenderungen automatisch sichern (git stash), Pull ausfuehren, dann wiederherstellen
+    echo   [2] Trotzdem fortfahren (kann fehlschlagen)
+    echo   [3] Abbrechen
+    echo.
+    set /p CHOICE="Waehle eine Option (1/2/3): "
+    
+    if /i "!CHOICE!"=="1" (
+        echo.
+        echo [INFO] Sichere lokale Aenderungen mit git stash...
+        git stash push -m "Automatisch gesichert von pull_changes.bat"
+        if !ERRORLEVEL! neq 0 (
+            echo [FEHLER] Git stash fehlgeschlagen!
+            goto :Error
+        )
+        echo [OK] Aenderungen wurden gesichert.
+        set "STASHED=1"
+    ) else if /i "!CHOICE!"=="2" (
+        echo.
+        echo [INFO] Versuche Pull ohne Stash...
+    ) else (
         echo.
         echo [ABBRUCH] Pull wurde abgebrochen.
         echo.
         goto :Cancelled
     )
-    goto :DoPull
 )
 
 :DoPull
@@ -192,6 +216,28 @@ if %PULL_RESULT% equ 0 (
     echo.
     echo [OK] Aenderungen wurden erfolgreich geholt.
     echo.
+    
+    REM Gesicherte Aenderungen wiederherstellen
+    if "%STASHED%"=="1" (
+        echo [INFO] Stelle gesicherte Aenderungen wieder her...
+        git stash pop
+        set "STASH_POP_RESULT=!ERRORLEVEL!"
+        if !STASH_POP_RESULT! neq 0 (
+            echo.
+            echo [WARNUNG] Beim Wiederherstellen gab es Konflikte!
+            echo           Deine Aenderungen sind noch im Stash gesichert.
+            echo.
+            echo Loese die Konflikte manuell:
+            echo   1. Oeffne die Dateien mit Konflikten
+            echo   2. Suche nach "<<<<<<< HEAD" und ">>>>>>> stash"
+            echo   3. Behalte die gewuenschten Aenderungen
+            echo   4. Fuehre aus: git add . ^&^& git stash drop
+            echo.
+        ) else (
+            echo [OK] Gesicherte Aenderungen wurden wiederhergestellt.
+            echo.
+        )
+    )
     
     REM Zeige letzte Commits
     echo [INFO] Letzte 3 Commits:
@@ -259,8 +305,13 @@ echo   - Merge-Konflikte mit lokalen Aenderungen
 echo   - Keine Netzwerkverbindung
 echo   - Authentifizierungsproblem
 echo.
+if "%STASHED%"=="1" (
+    echo [INFO] Deine Aenderungen wurden mit git stash gesichert.
+    echo        Um sie wiederherzustellen: git stash pop
+    echo.
+)
 echo Loesungsvorschlaege:
-echo   1. Sichere deine lokalen Aenderungen: git stash
+echo   1. Falls nicht automatisch gesichert: git stash
 echo   2. Fuehre den Pull erneut aus
 echo   3. Wende Aenderungen wieder an: git stash pop
 echo.
