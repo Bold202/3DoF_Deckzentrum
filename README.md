@@ -5,6 +5,7 @@
 
 [![Unity](https://img.shields.io/badge/Unity-2022.3%20LTS-blue)](https://unity.com/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green)](https://www.android.com/)
+[![Build Android APK](https://github.com/Bold202/3DoF_Deckzentrum/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Bold202/3DoF_Deckzentrum/actions/workflows/build-apk.yml)
 [![License](https://img.shields.io/badge/License-Proprietary-red)]()
 
 ## 📋 Projektübersicht
@@ -143,6 +144,7 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 
 | Dokument | Beschreibung |
 |----------|--------------|
+| [CI_CD_ANLEITUNG.md](CI_CD_ANLEITUNG.md) | **🆕 Automatischer APK-Build** mit GitHub Actions |
 | [UNITY_SETUP_ANLEITUNG.md](UNITY_SETUP_ANLEITUNG.md) | **🆕 Unity-Einrichtung** mit Setup-Wizard und automatischem Build |
 | [APK_BUILD_ANLEITUNG.md](APK_BUILD_ANLEITUNG.md) | **Vollständige APK-Build-Anleitung** für Android-Geräte |
 | [HANDY_MODUS_ANLEITUNG.md](HANDY_MODUS_ANLEITUNG.md) | **Benutzerhandbuch für Handy-Modus** (ohne VR-Hardware) |
@@ -150,6 +152,24 @@ Die D8-Planer XR App ermöglicht die Visualisierung von Sauendaten im Deckzentru
 | [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) | Vollständige Implementierungsanleitung mit Setup, Prefabs, Testing |
 | [CSV_EXAMPLES.md](CSV_EXAMPLES.md) | CSV-Format-Beispiele und Import-Anleitung |
 | [Tools/README.md](Tools/README.md) | QR-Code Generator Tool Dokumentation |
+
+## 🤖 Automatischer APK Build (CI/CD)
+
+Bei jedem Push auf den `main` Branch wird automatisch eine APK gebaut!
+
+### APK herunterladen:
+1. Gehe zu [Actions](https://github.com/Bold202/3DoF_Deckzentrum/actions)
+2. Klicke auf den neuesten erfolgreichen Build
+3. Lade das Artifact `D8-Planer-XR-APK-*` herunter
+4. Entpacke und installiere die APK auf deinem Gerät
+
+### Manueller Build:
+1. Gehe zu [Actions](https://github.com/Bold202/3DoF_Deckzentrum/actions) → **Build Android APK**
+2. Klicke **"Run workflow"**
+3. Wähle Release oder Debug
+4. Warte auf den Build und lade die APK herunter
+
+> 📘 **Einrichtung erforderlich:** Siehe [CI_CD_ANLEITUNG.md](CI_CD_ANLEITUNG.md) für die einmalige Konfiguration der Unity-Lizenz.
 
 ## 🚀 Ein-Klick APK Build
 

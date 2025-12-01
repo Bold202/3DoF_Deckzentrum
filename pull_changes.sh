@@ -188,6 +188,56 @@ if git pull; then
     git --no-pager log --oneline -3
     echo ""
     
+    # ============================================================
+    # Unity automatisch starten
+    # ============================================================
+    
+    echo "[INFO] Starte Unity mit dem Projekt..."
+    echo ""
+    
+    # Unity-Pfad suchen
+    UNITY_PATH=""
+    
+    # macOS Unity Hub Pfade
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        for version_dir in /Applications/Unity/Hub/Editor/2022.3*; do
+            if [[ -d "$version_dir" ]]; then
+                unity_exe="$version_dir/Unity.app/Contents/MacOS/Unity"
+                if [[ -f "$unity_exe" ]]; then
+                    UNITY_PATH="$unity_exe"
+                    break
+                fi
+            fi
+        done
+    fi
+    
+    # Linux Unity Hub Pfade
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        for version_dir in "$HOME/Unity/Hub/Editor"/2022.3*; do
+            if [[ -d "$version_dir" ]]; then
+                unity_exe="$version_dir/Editor/Unity"
+                if [[ -f "$unity_exe" ]]; then
+                    UNITY_PATH="$unity_exe"
+                    break
+                fi
+            fi
+        done
+    fi
+    
+    if [[ -n "$UNITY_PATH" ]]; then
+        echo "[OK] Unity gefunden: $UNITY_PATH"
+        echo "[INFO] Oeffne Unity-Projekt..."
+        echo ""
+        # Unity im Hintergrund starten, damit das Script beendet werden kann
+        "$UNITY_PATH" -projectPath "$SCRIPT_DIR" &
+        echo "[OK] Unity wird gestartet. Das Projekt wird geoeffnet."
+        echo "     Du kannst dann auf 'Build' klicken wenn du moechtest."
+    else
+        echo "[INFO] Unity nicht automatisch gefunden."
+        echo "       Oeffne das Projekt manuell in Unity Hub."
+    fi
+    echo ""
+    
     exit 0
 fi
 
