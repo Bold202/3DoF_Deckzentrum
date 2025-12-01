@@ -155,7 +155,7 @@ git status --short
 
 REM Warnung bei lokalen Aenderungen
 set "HAS_CHANGES=0"
-for /f %%i in ('git status --porcelain') do (
+for /f %%i in ('git status --porcelain 2^>nul') do (
     set "HAS_CHANGES=1"
 )
 
@@ -221,7 +221,8 @@ if %PULL_RESULT% equ 0 (
     if "%STASHED%"=="1" (
         echo [INFO] Stelle gesicherte Aenderungen wieder her...
         git stash pop
-        if !ERRORLEVEL! neq 0 (
+        set "STASH_POP_RESULT=!ERRORLEVEL!"
+        if !STASH_POP_RESULT! neq 0 (
             echo.
             echo [WARNUNG] Beim Wiederherstellen gab es Konflikte!
             echo           Deine Aenderungen sind noch im Stash gesichert.
